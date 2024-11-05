@@ -73,14 +73,14 @@ export default function SalaryCalculator() {
     setParameters(prev => ({ ...prev, [key]: parseFloat(value) || 0 }))
   }
 
-  const handleDayChange = (weekIndex: number, dayIndex: number, key: keyof DayState, value: any) => {
+  const handleDayChange = (weekIndex: number, dayIndex: number, key: keyof DayState, value: boolean | string) => {
     setWeeks(prev => {
-      const newWeeks = [...prev]
-      newWeeks[weekIndex] = [...newWeeks[weekIndex]]
-      newWeeks[weekIndex][dayIndex] = { ...newWeeks[weekIndex][dayIndex], [key]: value }
-      return newWeeks
-    })
-  }
+      const newWeeks = [...prev];
+      newWeeks[weekIndex] = [...newWeeks[weekIndex]];
+      newWeeks[weekIndex][dayIndex] = { ...newWeeks[weekIndex][dayIndex], [key]: value };
+      return newWeeks;
+    });
+  };
 
   const handleStraordinarioChange = (weekIndex: number, dayIndex: number, type: keyof DayState, field: 'ore' | 'minuti', value: string) => {
     setWeeks(prev => {
