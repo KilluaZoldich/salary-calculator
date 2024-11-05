@@ -260,4 +260,19 @@ export default function SalaryCalculator() {
         ))}
       </Tabs>
 
-      <Button onClick={calculateSalary} 
+      <Button onClick={calculateSalary} className="w-full">
+        <Calculator className="mr-2 h-4 w-4" /> Calcola Stipendio
+      </Button>
+
+      {totalSalary > 0 && (
+        <Card>
+          <CardContent className="pt-6">
+            <p className="text-center text-2xl font-bold">
+              Stipendio Totale: €{totalSalary.toFixed(2)}
+            </p>
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  )
+}
