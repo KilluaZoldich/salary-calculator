@@ -11,6 +11,30 @@ import { ChevronDown, ChevronUp, Calculator, Clock, Eye, EyeOff } from 'lucide-r
 
 const days = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom']
 
+type DayState = {
+  presenza: boolean;
+  guida: boolean;
+  extraFF: string;
+  reperibilita: boolean;
+  ffCena: boolean;
+  straordinarioDiurno: { ore: number; minuti: number };
+  straordinarioNotturno: { ore: number; minuti: number };
+  straordinarioFestivo: { ore: number; minuti: number };
+  showDetails: boolean;
+}
+
+const initialDayState: DayState = {
+  presenza: false,
+  guida: false,
+  extraFF: '0',
+  reperibilita: false,
+  ffCena: false,
+  straordinarioDiurno: { ore: 0, minuti: 0 },
+  straordinarioNotturno: { ore: 0, minuti: 0 },
+  straordinarioFestivo: { ore: 0, minuti: 0 },
+  showDetails: false,
+}
+
 export default function SalaryCalculator() {
   const [parameters, setParameters] = useState({
     stipendioBase: 0,
@@ -23,17 +47,11 @@ export default function SalaryCalculator() {
     reperibilitaFestivo: 0,
   })
 
-  const [weeks, setWeeks] = useState(Array(4).fill().map(() => Array(7).fill({
-    presenza: false,
-    guida: false,
-    extraFF: '0',
-    reperibilita: false,
-    ffCena: false,
-    straordinarioDiurno: { ore: 0, minuti: 0 },
-    straordinarioNotturno: { ore: 0, minuti: 0 },
-    straordinarioFestivo: { ore: 0, minuti: 0 },
-    showDetails: false,
-  })))
+  const [weeks, setWeeks] = useState<DayState[][]>(() => 
+    Array.from({ length: 4 }, () => 
+      Array.from({ length: 7 }, () => ({ ...initialDayState }))
+    )
+  )
 
   const [showParameters, setShowParameters] = useState(false)
   const [totalSalary, setTotalSalary] = useState(0)
@@ -51,11 +69,11 @@ export default function SalaryCalculator() {
     localStorage.setItem('salaryCalculatorData', JSON.stringify({ parameters, weeks }))
   }, [parameters, weeks])
 
-  const handleParameterChange = (key, value) => {
+  const handleParameterChange = (key: string, value: string) => {
     setParameters(prev => ({ ...prev, [key]: parseFloat(value) || 0 }))
   }
 
-  const handleDayChange = (weekIndex, dayIndex, key, value) => {
+  const handleDayChange = (weekIndex: number, dayIndex: number, key: keyof DayState, value: any) => {
     setWeeks(prev => {
       const newWeeks = [...prev]
       newWeeks[weekIndex] = [...newWeeks[weekIndex]]
@@ -64,14 +82,14 @@ export default function SalaryCalculator() {
     })
   }
 
-  const handleStraordinarioChange = (weekIndex, dayIndex, type, field, value) => {
+  const handleStraordinarioChange = (weekIndex: number, dayIndex: number, type: keyof DayState, field: 'ore' | 'minuti', value: string) => {
     setWeeks(prev => {
       const newWeeks = [...prev]
       newWeeks[weekIndex] = [...newWeeks[weekIndex]]
       newWeeks[weekIndex][dayIndex] = {
         ...newWeeks[weekIndex][dayIndex],
         [type]: {
-          ...newWeeks[weekIndex][dayIndex][type],
+          ...newWeeks[weekIndex][dayIndex][type as keyof Pick<DayState, 'straordinarioDiurno' | 'straordinarioNotturno' | 'straordinarioFestivo'>],
           [field]: parseInt(value) || 0
         }
       }
@@ -79,11 +97,11 @@ export default function SalaryCalculator() {
     })
   }
 
-  const toggleReperibilita = (weekIndex, dayIndex) => {
+  const toggleReperibilita = (weekIndex: number, dayIndex: number) => {
     handleDayChange(weekIndex, dayIndex, 'reperibilita', !weeks[weekIndex][dayIndex].reperibilita)
   }
 
-  const toggleDayDetails = (weekIndex, dayIndex) => {
+  const toggleDayDetails = (weekIndex: number, dayIndex: number) => {
     handleDayChange(weekIndex, dayIndex, 'showDetails', !weeks[weekIndex][dayIndex].showDetails)
   }
 
@@ -219,15 +237,15 @@ export default function SalaryCalculator() {
                             <Input
                               type="number"
                               placeholder="Ore"
-                              value={day[`straordinario${tipo}`].ore}
-                              onChange={(e) => handleStraordinarioChange(weekIndex, dayIndex, `straordinario${tipo}`, 'ore', e.target.value)}
+                              value={day[`straordinario${tipo}` as keyof Pick<DayState, 'straordinarioDiurno' | 'straordinarioNotturno' | 'straordinarioFestivo'>].ore}
+                              onChange={(e) => handleStraordinarioChange(weekIndex, dayIndex, `straordinario${tipo}` as keyof DayState, 'ore', e.target.value)}
                               className="w-16"
                             />
                             <Input
                               type="number"
                               placeholder="Min"
-                              value={day[`straordinario${tipo}`].minuti}
-                              onChange={(e) => handleStraordinarioChange(weekIndex, dayIndex, `straordinario${tipo}`, 'minuti', e.target.value)}
+                              value={day[`straordinario${tipo}` as keyof Pick<DayState, 'straordinarioDiurno' | 'straordinarioNotturno' | 'straordinarioFestivo'>].minuti}
+                              onChange={(e) => handleStraordinarioChange(weekIndex, dayIndex, `straordinario${tipo}` as keyof DayState, 'minuti', e.target.value)}
                               className="w-16"
                             />
                           </div>
@@ -242,19 +260,4 @@ export default function SalaryCalculator() {
         ))}
       </Tabs>
 
-      <Button onClick={calculateSalary} className="w-full">
-        <Calculator className="mr-2 h-4 w-4" /> Calcola Stipendio
-      </Button>
-
-      {totalSalary > 0 && (
-        <Card>
-          <CardContent className="pt-6">
-            <p className="text-center text-2xl font-bold">
-              Stipendio Totale: €{totalSalary.toFixed(2)}
-            </p>
-          </CardContent>
-        </Card>
-      )}
-    </div>
-  )
-}
+      <Button onClick={calculateSalary} 
