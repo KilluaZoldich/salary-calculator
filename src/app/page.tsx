@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Switch } from "@/components/ui/switch"
 import {
   Accordion,
@@ -53,8 +53,8 @@ export default function SalaryCalculator() {
     reperibilitaFestivo: 0,
   })
 
-  const [weeks, setWeeks] = useState<DayState[][]>(() => 
-    Array.from({ length: 4 }, () => 
+  const [weeks, setWeeks] = useState<DayState[][]>(() =>
+    Array.from({ length: 4 }, () =>
       Array.from({ length: 7 }, () => ({ ...initialDayState }))
     )
   )
@@ -144,15 +144,15 @@ export default function SalaryCalculator() {
   }
 
   return (
-    <div className={`container mx-auto p-4 space-y-4 ${darkMode ? 'dark' : ''}`}>
+    <div className={`container mx-auto p-4 space-y-4 ${darkMode ? 'dark bg-gray-900 text-gray-100' : ''}`}>
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold text-primary">Calcolatrice Stipendio</h1>
-        <Button variant="ghost" size="icon" onClick={() => setDarkMode(!darkMode)}>
+        <Button variant="ghost" size="icon" onClick={() => setDarkMode(!darkMode)} className="text-gray-800 dark:text-gray-200">
           {darkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
         </Button>
       </div>
 
-      <Card>
+      <Card className="bg-white dark:bg-gray-800">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Parametri Base</CardTitle>
           <Button variant="ghost" size="sm" onClick={() => setShowParameters(!showParameters)}>
@@ -176,7 +176,7 @@ export default function SalaryCalculator() {
                     type="number"
                     value={value}
                     onChange={(e) => handleParameterChange(key, e.target.value)}
-                    className="w-full"
+                    className="w-full bg-white dark:bg-gray-700 dark:text-gray-100"
                   />
                 </div>
               ))}
@@ -193,7 +193,7 @@ export default function SalaryCalculator() {
         </TabsList>
         {weeks.map((week, weekIndex) => (
           <TabsContent key={weekIndex} value={(weekIndex + 1).toString()}>
-            <Card>
+            <Card className="bg-white dark:bg-gray-800">
               <CardHeader>
                 <CardTitle>Settimana {weekIndex + 1}</CardTitle>
                 <CardDescription>Inserisci i dettagli per ogni giorno</CardDescription>
@@ -246,7 +246,7 @@ export default function SalaryCalculator() {
                                 id={`extraFF-${weekIndex}-${dayIndex}`}
                                 value={day.extraFF}
                                 onChange={(e) => handleDayChange(weekIndex, dayIndex, 'extraFF', e.target.value)}
-                                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 dark:bg-gray-700 dark:text-gray-100"
                               >
                                 <option value="0">-</option>
                                 <option value="extraMensa">EM</option>
@@ -262,14 +262,14 @@ export default function SalaryCalculator() {
                                   placeholder="Ore"
                                   value={day[`straordinario${tipo}` as keyof Pick<DayState, 'straordinarioDiurno' | 'straordinarioNotturno' | 'straordinarioFestivo'>].ore}
                                   onChange={(e) => handleStraordinarioChange(weekIndex, dayIndex, `straordinario${tipo}` as keyof DayState, 'ore', e.target.value)}
-                                  className="w-16"
+                                  className="w-16 bg-white dark:bg-gray-700 dark:text-gray-100"
                                 />
                                 <Input
                                   type="number"
                                   placeholder="Min"
                                   value={day[`straordinario${tipo}` as keyof Pick<DayState, 'straordinarioDiurno' | 'straordinarioNotturno' | 'straordinarioFestivo'>].minuti}
                                   onChange={(e) => handleStraordinarioChange(weekIndex, dayIndex, `straordinario${tipo}` as keyof DayState, 'minuti', e.target.value)}
-                                  className="w-16"
+                                  className="w-16 bg-white dark:bg-gray-700 dark:text-gray-100"
                                 />
                               </div>
                             ))}
@@ -290,10 +290,10 @@ export default function SalaryCalculator() {
       </Button>
 
       {totalSalary > 0 && (
-        <Card>
+        <Card className="bg-white dark:bg-gray-800">
           <CardContent className="pt-6">
             <p className="text-center text-3xl font-bold">
-              Stipendio Totale: <span className="text-primary">€{totalSalary.toFixed(2)}</span>
+              Stipendio Totale: <span className="text-primary dark:text-blue-400">€{totalSalary.toFixed(2)}</span>
             </p>
           </CardContent>
         </Card>
