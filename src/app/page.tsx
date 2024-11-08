@@ -13,7 +13,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion"
-import { ChevronDown, ChevronUp, Calculator, Clock, Eye, EyeOff, Sun, Moon, Euro, Car, Coffee, Phone } from 'lucide-react'
+import { ChevronDown, ChevronUp, Calculator, Clock, Eye, EyeOff, Sun, Moon, Euro, Car, Coffee, Phone, RefreshCw } from 'lucide-react'
 
 const days = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom']
 
@@ -41,17 +41,19 @@ const initialDayState: DayState = {
   showDetails: false,
 }
 
+const initialParameters = {
+  stipendioBase: 0,
+  indennitaGuida: 0,
+  extraMensa: 0,
+  ff: 0,
+  ffCena: 0,
+  reperibilitaFeriale: 0,
+  reperibilitaSabato: 0,
+  reperibilitaFestivo: 0,
+}
+
 export default function SalaryCalculator() {
-  const [parameters, setParameters] = useState({
-    stipendioBase: 0,
-    indennitaGuida: 0,
-    extraMensa: 0,
-    ff: 0,
-    ffCena: 0,
-    reperibilitaFeriale: 0,
-    reperibilitaSabato: 0,
-    reperibilitaFestivo: 0,
-  })
+  const [parameters, setParameters] = useState(initialParameters)
 
   const [weeks, setWeeks] = useState<DayState[][]>(() =>
     Array.from({ length: 4 }, () =>
@@ -85,7 +87,7 @@ export default function SalaryCalculator() {
   }, [darkMode])
 
   const handleParameterChange = (key: string, value: string) => {
-    setParameters(prev => ({ ...prev, [key]: parseFloat(value) || 0 }))
+    setParameters(prev => ({ ...prev, [key]: value === '' ? '' : parseFloat(value) || 0 }))
   }
 
   const handleDayChange = (weekIndex: number, dayIndex: number, key: keyof DayState, value: boolean | string) => {
@@ -143,16 +145,29 @@ export default function SalaryCalculator() {
     setTotalSalary(total)
   }
 
+  const resetAll = () => {
+    setWeeks(Array.from({ length: 4 }, () =>
+      Array.from({ length: 7 }, () => ({ ...initialDayState }))
+    ))
+    setTotalSalary(0)
+    localStorage.setItem('salaryCalculatorData', JSON.stringify({ parameters, weeks: Array.from({ length: 4 }, () => Array.from({ length: 7 }, () => ({ ...initialDayState }))) }))
+  }
+
   return (
-    <div className={`container mx-auto p-4 space-y-4 ${darkMode ? 'dark bg-gray-900 text-gray-100' : ''}`}>
+    <div className={`container mx-auto p-4 space-y-4 ${darkMode ? 'dark bg-gray-800 text-gray-100' : 'bg-gray-100'}`}>
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold text-primary">Calcolatrice Stipendio</h1>
-        <Button variant="ghost" size="icon" onClick={() => setDarkMode(!darkMode)} className="text-gray-800 dark:text-gray-200">
-          {darkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
-        </Button>
+        <div className="flex space-x-2">
+          <Button variant="outline" size="icon" onClick={resetAll} className="text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300">
+            <RefreshCw className="h-5 w-5" />
+          </Button>
+          <Button variant="outline" size="icon" onClick={() => setDarkMode(!darkMode)} className="text-gray-800 dark:text-gray-200">
+            {darkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+          </Button>
+        </div>
       </div>
 
-      <Card className="bg-white dark:bg-gray-800">
+      <Card className="bg-white dark:bg-gray-700 shadow-lg">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Parametri Base</CardTitle>
           <Button variant="ghost" size="sm" onClick={() => setShowParameters(!showParameters)}>
@@ -164,7 +179,7 @@ export default function SalaryCalculator() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               {Object.entries(parameters).map(([key, value]) => (
                 <div key={key} className="flex flex-col space-y-1">
-                  <Label htmlFor={key} className="flex items-center space-x-2">
+                  <Label htmlFor={key} className="flex items-center space-x-2 text-gray-700 dark:text-gray-300">
                     {key === 'stipendioBase' && <Euro className="h-4 w-4" />}
                     {key === 'indennitaGuida' && <Car className="h-4 w-4" />}
                     {(key === 'extraMensa' || key === 'ff' || key === 'ffCena') && <Coffee className="h-4 w-4" />}
@@ -174,9 +189,9 @@ export default function SalaryCalculator() {
                   <Input
                     id={key}
                     type="number"
-                    value={value}
+                    value={value || ''}
                     onChange={(e) => handleParameterChange(key, e.target.value)}
-                    className="w-full bg-white dark:bg-gray-700 dark:text-gray-100"
+                    className="w-full bg-gray-50 dark:bg-gray-600 dark:text-gray-100 border-gray-300 dark:border-gray-500"
                   />
                 </div>
               ))}
@@ -186,26 +201,26 @@ export default function SalaryCalculator() {
       </Card>
 
       <Tabs defaultValue="1">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-4 bg-gray-200 dark:bg-gray-700">
           {[1, 2, 3, 4].map((week) => (
-            <TabsTrigger key={week} value={week.toString()}>Settimana {week}</TabsTrigger>
+            <TabsTrigger key={week} value={week.toString()} className="data-[state=active]:bg-white dark:data-[state=active]:bg-gray-600">Settimana {week}</TabsTrigger>
           ))}
         </TabsList>
         {weeks.map((week, weekIndex) => (
           <TabsContent key={weekIndex} value={(weekIndex + 1).toString()}>
-            <Card className="bg-white dark:bg-gray-800">
+            <Card className="bg-white dark:bg-gray-700 shadow-lg">
               <CardHeader>
                 <CardTitle>Settimana {weekIndex + 1}</CardTitle>
-                <CardDescription>Inserisci i dettagli per ogni giorno</CardDescription>
+                <CardDescription className="dark:text-gray-300">Inserisci i dettagli per ogni giorno</CardDescription>
               </CardHeader>
               <CardContent>
                 <Accordion type="single" collapsible className="w-full">
                   {week.map((day, dayIndex) => (
                     <AccordionItem key={dayIndex} value={`day-${dayIndex}`}>
-                      <AccordionTrigger className="flex justify-between items-center">
+                      <AccordionTrigger className="flex justify-between items-center hover:bg-gray-100 dark:hover:bg-gray-600">
                         <span className="font-medium">{days[dayIndex]}</span>
                         <div className="flex items-center space-x-2">
-                          <Label htmlFor={`presenza-${weekIndex}-${dayIndex}`}>Presenza</Label>
+                          <Label htmlFor={`presenza-${weekIndex}-${dayIndex}`} className="text-gray-700 dark:text-gray-300">Presenza</Label>
                           <Switch
                             id={`presenza-${weekIndex}-${dayIndex}`}
                             checked={day.presenza}
@@ -217,7 +232,7 @@ export default function SalaryCalculator() {
                         {day.presenza && (
                           <div className="grid grid-cols-2 gap-4 pt-4">
                             <div className="flex items-center space-x-2">
-                              <Label htmlFor={`guida-${weekIndex}-${dayIndex}`}>Guida</Label>
+                              <Label htmlFor={`guida-${weekIndex}-${dayIndex}`} className="text-gray-700 dark:text-gray-300">Guida</Label>
                               <Switch
                                 id={`guida-${weekIndex}-${dayIndex}`}
                                 checked={day.guida}
@@ -225,7 +240,7 @@ export default function SalaryCalculator() {
                               />
                             </div>
                             <div className="flex items-center space-x-2">
-                              <Label htmlFor={`reperibilita-${weekIndex}-${dayIndex}`}>Reperibilità</Label>
+                              <Label htmlFor={`reperibilita-${weekIndex}-${dayIndex}`} className="text-gray-700 dark:text-gray-300">Reperibilità</Label>
                               <Switch
                                 id={`reperibilita-${weekIndex}-${dayIndex}`}
                                 checked={day.reperibilita}
@@ -233,7 +248,7 @@ export default function SalaryCalculator() {
                               />
                             </div>
                             <div className="flex items-center space-x-2">
-                              <Label htmlFor={`ffCena-${weekIndex}-${dayIndex}`}>FF Cena</Label>
+                              <Label htmlFor={`ffCena-${weekIndex}-${dayIndex}`} className="text-gray-700 dark:text-gray-300">FF Cena</Label>
                               <Switch
                                 id={`ffCena-${weekIndex}-${dayIndex}`}
                                 checked={day.ffCena}
@@ -241,12 +256,12 @@ export default function SalaryCalculator() {
                               />
                             </div>
                             <div className="flex items-center space-x-2">
-                              <Label htmlFor={`extraFF-${weekIndex}-${dayIndex}`}>E/F</Label>
+                              <Label htmlFor={`extraFF-${weekIndex}-${dayIndex}`} className="text-gray-700 dark:text-gray-300">E/F</Label>
                               <select
                                 id={`extraFF-${weekIndex}-${dayIndex}`}
                                 value={day.extraFF}
                                 onChange={(e) => handleDayChange(weekIndex, dayIndex, 'extraFF', e.target.value)}
-                                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 dark:bg-gray-700 dark:text-gray-100"
+                                className="w-full rounded-md border border-gray-300 dark:border-gray-500 bg-gray-50 dark:bg-gray-600 px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 dark:text-gray-100"
                               >
                                 <option value="0">-</option>
                                 <option value="extraMensa">EM</option>
@@ -255,21 +270,21 @@ export default function SalaryCalculator() {
                             </div>
                             {['Diurno', 'Notturno', 'Festivo'].map((tipo) => (
                               <div key={tipo} className="col-span-2 flex items-center space-x-2">
-                                <Clock className="h-4 w-4" />
-                                <Label>Str. {tipo}</Label>
+                                <Clock className="h-4 w-4 text-gray-600 dark:text-gray-400" />
+                                <Label className="text-gray-700 dark:text-gray-300">Str. {tipo}</Label>
                                 <Input
                                   type="number"
                                   placeholder="Ore"
                                   value={day[`straordinario${tipo}` as keyof Pick<DayState, 'straordinarioDiurno' | 'straordinarioNotturno' | 'straordinarioFestivo'>].ore}
                                   onChange={(e) => handleStraordinarioChange(weekIndex, dayIndex, `straordinario${tipo}` as keyof DayState, 'ore', e.target.value)}
-                                  className="w-16 bg-white dark:bg-gray-700 dark:text-gray-100"
+                                  className="w-16 bg-gray-50 dark:bg-gray-600 dark:text-gray-100 border-gray-300 dark:border-gray-500"
                                 />
                                 <Input
                                   type="number"
                                   placeholder="Min"
                                   value={day[`straordinario${tipo}` as keyof Pick<DayState, 'straordinarioDiurno' | 'straordinarioNotturno' | 'straordinarioFestivo'>].minuti}
                                   onChange={(e) => handleStraordinarioChange(weekIndex, dayIndex, `straordinario${tipo}` as keyof DayState, 'minuti', e.target.value)}
-                                  className="w-16 bg-white dark:bg-gray-700 dark:text-gray-100"
+                                  className="w-16 bg-gray-50 dark:bg-gray-600 dark:text-gray-100 border-gray-300 dark:border-gray-500"
                                 />
                               </div>
                             ))}
@@ -285,15 +300,15 @@ export default function SalaryCalculator() {
         ))}
       </Tabs>
 
-      <Button onClick={calculateSalary} className="w-full">
+      <Button onClick={calculateSalary} className="w-full bg-blue-500 hover:bg-blue-600 text-white">
         <Calculator className="mr-2 h-4 w-4" /> Calcola Stipendio
       </Button>
 
       {totalSalary > 0 && (
-        <Card className="bg-white dark:bg-gray-800">
+        <Card className="bg-white dark:bg-gray-700 shadow-lg">
           <CardContent className="pt-6">
             <p className="text-center text-3xl font-bold">
-              Stipendio Totale: <span className="text-primary dark:text-blue-400">€{totalSalary.toFixed(2)}</span>
+              Stipendio Totale: <span className="text-blue-500 dark:text-blue-400">€{totalSalary.toFixed(2)}</span>
             </p>
           </CardContent>
         </Card>
