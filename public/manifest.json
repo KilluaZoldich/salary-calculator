@@ -1,21 +1,21 @@
 {
   "name": "Calcolatore Stipendio",
   "short_name": "Stipendio",
-  "description": "Calcola il tuo stipendio con facilità",
+  "description": "Calcola il tuo stipendio con straordinari e indennità",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#020817",
-  "theme_color": "#020817",
-  "orientation": "portrait",
+  "background_color": "#ffffff",
+  "theme_color": "#000000",
+  "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "/icon-192.png",
+      "src": "/icon-192x192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "/icon-512.png",
+      "src": "/icon-512x512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"

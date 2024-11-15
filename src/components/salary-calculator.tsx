@@ -11,8 +11,51 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-// Move your types and initialState here
-// ... (copy your types and initial state from page.tsx)
+type DayState = {
+  presenza: boolean;
+  guida: boolean;
+  extraFF: 'none' | 'extraMensa' | 'ff';
+  reperibilita: boolean;
+  ffCena: boolean;
+  straordinarioDiurno: { ore: string; minuti: string };
+  straordinarioNotturno: { ore: string; minuti: string };
+  straordinarioFestivo: { ore: string; minuti: string };
+};
+
+type Parameters = {
+  stipendioBase: string;
+  indennitaGuida: string;
+  extraMensa: string;
+  ff: string;
+  ffCena: string;
+  reperibilitaFeriale: string;
+  reperibilitaSabato: string;
+  reperibilitaFestivo: string;
+};
+
+const initialParameters: Parameters = {
+  stipendioBase: "0",
+  indennitaGuida: "0",
+  extraMensa: "0",
+  ff: "0",
+  ffCena: "0",
+  reperibilitaFeriale: "0",
+  reperibilitaSabato: "0",
+  reperibilitaFestivo: "0"
+};
+
+const initialDay: DayState = {
+  presenza: false,
+  guida: false,
+  extraFF: 'none',
+  reperibilita: false,
+  ffCena: false,
+  straordinarioDiurno: { ore: "0", minuti: "0" },
+  straordinarioNotturno: { ore: "0", minuti: "0" },
+  straordinarioFestivo: { ore: "0", minuti: "0" }
+};
+
+const initialWeek = Array(7).fill(null).map(() => ({ ...initialDay }));
 
 export default function SalaryCalculator() {
   // Initialize state with default values
@@ -52,11 +95,10 @@ export default function SalaryCalculator() {
     }
   }, [parameters, weeks, activeWeek, showSettings, darkMode]);
 
-  // Your existing functions here
-  // ... (copy your functions from page.tsx)
-
   return (
-    // Your existing JSX here
-    // ... (copy your JSX from page.tsx)
+    <div className="min-h-screen bg-background text-foreground">
+      {/* Your existing JSX here */}
+      <div>Work in progress...</div>
+    </div>
   );
 }

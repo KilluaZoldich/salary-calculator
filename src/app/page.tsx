@@ -1,17 +1,23 @@
 'use client'
 
 import { useEffect, useState, useMemo } from "react"
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/ui/button"; // Fixing the Button component import
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Switch } from "@/components/ui/switch"
-import { Sun, Moon, Euro, Calculator, Calendar, Clock, Settings, ChevronRight, ChevronUp, ChevronDown, RotateCcw, Settings2 } from 'lucide-react'
+import { Sun, Moon, Euro, ChevronRight, ChevronUp, ChevronDown, RotateCcw, Settings2, Calendar } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/lib/utils'
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useLocalStorage } from "@/components/client-wrapper"
+import { Parameters } from "@/components/parameters"
+
+type TimeEntry = {
+  ore: string;
+  minuti: string;
+};
 
 type DayState = {
   presenza: boolean;
@@ -19,9 +25,9 @@ type DayState = {
   extraFF: 'none' | 'extraMensa' | 'ff';
   reperibilita: boolean;
   ffCena: boolean;
-  straordinarioDiurno: { ore: string; minuti: string };
-  straordinarioNotturno: { ore: string; minuti: string };
-  straordinarioFestivo: { ore: string; minuti: string };
+  straordinarioDiurno: TimeEntry;
+  straordinarioNotturno: TimeEntry;
+  straordinarioFestivo: TimeEntry;
 }
 
 type Parameters = {
@@ -49,14 +55,14 @@ const emptyDay: DayState = {
 }
 
 const initialParameters: Parameters = {
-  stipendioBase: '',
-  indennitaGuida: '',
-  extraMensa: '',
-  ff: '',
-  ffCena: '',
-  reperibilitaFeriale: '',
-  reperibilitaSabato: '',
-  reperibilitaFestivo: ''
+  stipendioBase: '0',
+  indennitaGuida: '0',
+  extraMensa: '0',
+  ff: '0',
+  ffCena: '0',
+  reperibilitaFeriale: '0',
+  reperibilitaSabato: '0',
+  reperibilitaFestivo: '0'
 }
 
 export default function SalaryCalculator() {
@@ -89,17 +95,17 @@ export default function SalaryCalculator() {
     setParameters((prev: Parameters) => ({ ...prev, [key]: value }));
   }
 
-  const handleDayChange = (weekIndex: number, dayIndex: number, field: keyof DayState, value: any) => {
+  const handleDayChange = (_weekIndex: number, dayIndex: number, field: keyof DayState, value: any) => {
     setWeeks((prev: DayState[][]) => {
       const newWeeks = [...prev];
       if (field === 'straordinarioDiurno' || field === 'straordinarioNotturno' || field === 'straordinarioFestivo') {
-        newWeeks[weekIndex][dayIndex] = {
-          ...newWeeks[weekIndex][dayIndex],
-          [field]: { ...newWeeks[weekIndex][dayIndex][field], ...value }
+        newWeeks[activeWeek][dayIndex] = {
+          ...newWeeks[activeWeek][dayIndex],
+          [field]: { ...newWeeks[activeWeek][dayIndex][field], ...value }
         };
       } else {
-        newWeeks[weekIndex][dayIndex] = {
-          ...newWeeks[weekIndex][dayIndex],
+        newWeeks[activeWeek][dayIndex] = {
+          ...newWeeks[activeWeek][dayIndex],
           [field]: value
         };
       }
@@ -107,146 +113,228 @@ export default function SalaryCalculator() {
     });
   };
 
-  const calculateTotalSalary = useMemo(() => {
-    let total = 0;
-    weeks.forEach((week) => {
-      week.forEach((day, dayIndex) => {
-        if (day.presenza) {
-          const baseHourlyRate = parseFloat(parameters.stipendioBase) || 0;
-          total += baseHourlyRate * 7.6;
-
-          if (day.guida) total += parseFloat(parameters.indennitaGuida) || 0;
-          if (day.extraFF === 'extraMensa') total += parseFloat(parameters.extraMensa) || 0;
-          if (day.extraFF === 'ff') total += parseFloat(parameters.ff) || 0;
-          if (day.ffCena) total += parseFloat(parameters.ffCena) || 0;
-
-          if (day.reperibilita) {
-            total += parseFloat(
-              dayIndex === 5 ? parameters.reperibilitaSabato :
-              dayIndex === 6 ? parameters.reperibilitaFestivo :
-              parameters.reperibilitaFeriale
-            ) || 0;
+  const handleOvertimeChange = (
+    _weekIndex: number,
+    dayIndex: number,
+    field: keyof Pick<DayState, 'straordinarioDiurno' | 'straordinarioNotturno' | 'straordinarioFestivo'>,
+    overtimeField: keyof TimeEntry,
+    value: string
+  ) => {
+    setWeeks((prev: DayState[][]) => {
+      const newWeeks = [...prev];
+      if (newWeeks[activeWeek]?.[dayIndex]?.[field]) {
+        newWeeks[activeWeek][dayIndex] = {
+          ...newWeeks[activeWeek][dayIndex],
+          [field]: {
+            ...newWeeks[activeWeek][dayIndex][field],
+            [overtimeField]: value
           }
-
-          const calculateOvertime = (hours: string, minutes: string) => 
-            (parseFloat(hours) || 0) + ((parseFloat(minutes) || 0) / 60);
-
-          const regularOT = calculateOvertime(day.straordinarioDiurno.ore, day.straordinarioDiurno.minuti);
-          const nightOT = calculateOvertime(day.straordinarioNotturno.ore, day.straordinarioNotturno.minuti);
-          const holidayOT = calculateOvertime(day.straordinarioFestivo.ore, day.straordinarioFestivo.minuti);
-
-          total += regularOT * baseHourlyRate * 1.15;
-          total += nightOT * baseHourlyRate * 1.3;
-          total += holidayOT * baseHourlyRate * 1.4;
-        }
-      });
+        };
+      }
+      return newWeeks;
     });
-    return total;
-  }, [weeks, parameters]);
+  };
 
+  const calculateDaySalary = useMemo(() => (week: number, dayIndex: number): number => {
+    const day = weeks[week]?.[dayIndex];
+    if (!day) return 0;
+
+    // Ensure all parameters are valid numbers, default to 0 if invalid
+    const getNumericValue = (value: string) => {
+      const parsed = parseFloat(value);
+      return isNaN(parsed) ? 0 : parsed;
+    };
+
+    // Base salary calculation for standard work day (7 hours and 36 minutes = 7.6 hours)
+    const STANDARD_DAILY_HOURS = 7.6;
+    const hourlyRate = getNumericValue(parameters.stipendioBase);
+    let salary = day.presenza ? hourlyRate * STANDARD_DAILY_HOURS : 0;
+
+    // Add guida compensation
+    if (day.guida) {
+      salary += getNumericValue(parameters.indennitaGuida);
+    }
+
+    // Add extra/FF compensation
+    if (day.extraFF === 'extraMensa') {
+      salary += getNumericValue(parameters.extraMensa);
+    } else if (day.extraFF === 'ff') {
+      salary += getNumericValue(parameters.ff);
+    }
+
+    // Add FF Cena
+    if (day.ffCena) {
+      salary += getNumericValue(parameters.ffCena);
+    }
+
+    // Add reperibilità based on day type
+    if (day.reperibilita) {
+      if (dayIndex === 5) { // Saturday
+        salary += getNumericValue(parameters.reperibilitaSabato);
+      } else if (dayIndex === 6) { // Sunday
+        salary += getNumericValue(parameters.reperibilitaFestivo);
+      } else { // Weekday
+        salary += getNumericValue(parameters.reperibilitaFeriale);
+      }
+    }
+
+    // Calculate overtime
+    const calculateOvertimeMinutes = (ore: string, minuti: string): number => {
+      const hours = parseInt(ore) || 0;
+      const minutes = parseInt(minuti) || 0;
+      return hours * 60 + minutes;
+    };
+
+    // Calcola la maggiorazione oraria in base allo stipendio base
+    const calculateOvertimeRate = (baseRate: number, percentage: number): number => {
+      return baseRate + (baseRate * percentage);
+    };
+
+    // Diurno overtime (maggiorazione 25%)
+    const diurnoMinutes = calculateOvertimeMinutes(
+      day.straordinarioDiurno?.ore || '0',
+      day.straordinarioDiurno?.minuti || '0'
+    );
+    if (diurnoMinutes > 0) {
+      const overtimeRate = calculateOvertimeRate(hourlyRate, 0.25);
+      salary += (diurnoMinutes / 60) * overtimeRate;
+    }
+
+    // Notturno overtime (maggiorazione 40%)
+    const notturnoMinutes = calculateOvertimeMinutes(
+      day.straordinarioNotturno?.ore || '0',
+      day.straordinarioNotturno?.minuti || '0'
+    );
+    if (notturnoMinutes > 0) {
+      const overtimeRate = calculateOvertimeRate(hourlyRate, 0.40);
+      salary += (notturnoMinutes / 60) * overtimeRate;
+    }
+
+    // Festivo overtime (maggiorazione 50%)
+    const festivoMinutes = calculateOvertimeMinutes(
+      day.straordinarioFestivo?.ore || '0',
+      day.straordinarioFestivo?.minuti || '0'
+    );
+    if (festivoMinutes > 0) {
+      const overtimeRate = calculateOvertimeRate(hourlyRate, 0.50);
+      salary += (festivoMinutes / 60) * overtimeRate;
+    }
+
+    return Number(salary.toFixed(2));
+  }, [weeks, parameters, activeWeek]);
+
+  const generateWeeklyReport = (weekIndex: number): string => {
+    const week = weeks[weekIndex];
+    if (!week) return '';
+
+    let presenze = 0;
+    let guide = 0;
+    let straordinariDiurni = 0;
+    let straordinariNotturni = 0;
+    let straordinariFestivi = 0;
+    let extraMensa = 0;
+    let ff = 0;
+    let ffCena = 0;
+    let reperibilita = 0;
+    let totaleSalario = 0;
+
+    week.forEach((day, dayIndex) => {
+      if (day.presenza) presenze++;
+      if (day.guida) guide++;
+      if (day.extraFF === 'extraMensa') extraMensa++;
+      if (day.extraFF === 'ff') ff++;
+      if (day.ffCena) ffCena++;
+      if (day.reperibilita) reperibilita++;
+
+      // Calcola ore straordinari
+      const getMinutes = (ore: string = '0', minuti: string = '0') => 
+        (parseInt(ore) || 0) * 60 + (parseInt(minuti) || 0);
+
+      if (day.straordinarioDiurno) {
+        straordinariDiurni += getMinutes(
+          day.straordinarioDiurno.ore,
+          day.straordinarioDiurno.minuti
+        );
+      }
+      if (day.straordinarioNotturno) {
+        straordinariNotturni += getMinutes(
+          day.straordinarioNotturno.ore,
+          day.straordinarioNotturno.minuti
+        );
+      }
+      if (day.straordinarioFestivo) {
+        straordinariFestivi += getMinutes(
+          day.straordinarioFestivo.ore,
+          day.straordinarioFestivo.minuti
+        );
+      }
+
+      totaleSalario += calculateDaySalary(weekIndex, dayIndex);
+    });
+
+    return `
+Riepilogo Settimana ${weekIndex + 1}:
+------------------------
+Presenze: ${presenze} giorni
+Guide: ${guide} giorni
+Straordinari:
+  - Diurni: ${(straordinariDiurni / 60).toFixed(1)} ore
+  - Notturni: ${(straordinariNotturni / 60).toFixed(1)} ore
+  - Festivi: ${(straordinariFestivi / 60).toFixed(1)} ore
+Extra Mensa: ${extraMensa} giorni
+Fuori Ferie: ${ff} giorni
+FF Cena: ${ffCena} giorni
+Reperibilità: ${reperibilita} giorni
+Totale Salario: €${totaleSalario.toFixed(2)}
+`;
+  };
+
+  const downloadReport = () => {
+    let fullReport = 'REPORT MENSILE\n=============\n\n';
+    
+    weeks.forEach((_, index) => {
+      fullReport += generateWeeklyReport(index) + '\n';
+    });
+
+    const blob = new Blob([fullReport], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'report-mensile.txt';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  // Calculate total salary
   useEffect(() => {
-    setTotalSalary(calculateTotalSalary);
-  }, [calculateTotalSalary]);
+    const total = weeks.reduce((weekTotal, week, weekIndex) => {
+      return weekTotal + week.reduce((dayTotal, _, dayIndex) => {
+        return dayTotal + calculateDaySalary(weekIndex, dayIndex);
+      }, 0);
+    }, 0);
+    setTotalSalary(Math.round(total * 100) / 100);
+  }, [weeks, calculateDaySalary]);
 
   return (
-    <div className="min-h-screen w-full bg-background text-foreground overflow-x-hidden">
-      <div className="container mx-auto px-4 py-6 max-w-7xl">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row items-center justify-between mb-8 sticky top-0 z-50 glass-morphism px-4 sm:px-6 py-4 rounded-2xl animate-slow gap-4">
-          <h1 className="text-2xl font-semibold text-primary order-1 sm:order-2">
-            Calcolatore Stipendio
-          </h1>
-          <div className="flex items-center gap-2 order-2 sm:order-1 w-full sm:w-auto justify-center sm:justify-start">
+    <main className="min-h-screen p-8">
+      <div className="container mx-auto">
+        <h1 className="text-4xl font-bold mb-8">Calcolatore Stipendio</h1>
+        <div className="space-y-8">
+          <Parameters parameters={parameters} setParameters={setParameters} />
+          
+          {/* Download Report Button */}
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-2xl font-semibold">Settimane</h2>
             <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => {
-                const newWeeks = [...weeks];
-                newWeeks[activeWeek] = newWeeks[activeWeek].map(() => ({ ...emptyDay }));
-                setWeeks(newWeeks);
-              }}
-              className="flex items-center gap-2 hover:bg-secondary/50 rounded-xl text-xs sm:text-sm"
+              onClick={downloadReport}
+              variant="default"
+              className="bg-green-600 hover:bg-green-700" // Fixing the Button component styling
             >
-              <RotateCcw className="h-3 w-3 sm:h-4 sm:w-4" />
-              <span className="hidden sm:inline">Resetta Settimana</span>
-              <span className="sm:hidden">Reset</span>
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setDarkMode(!darkMode)}
-              className="flex items-center gap-2 hover:bg-secondary/50 rounded-xl text-xs sm:text-sm"
-            >
-              {darkMode ? <Sun className="h-3 w-3 sm:h-4 sm:w-4" /> : <Moon className="h-3 w-3 sm:h-4 sm:w-4" />}
-              <span className="hidden sm:inline">{darkMode ? 'Tema Chiaro' : 'Tema Scuro'}</span>
+              Scarica Report
             </Button>
           </div>
-        </div>
-
-        {/* Main Content */}
-        <div className="space-y-6">
-          {/* Parameters Section */}
-          <Card className="modern-card hover-card">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 sm:pb-4">
-              <CardTitle className="text-lg sm:text-xl flex items-center gap-2">
-                <Settings2 className="h-4 w-4 sm:h-5 sm:w-5" />
-                <span className="text-primary">Parametri Base</span>
-              </CardTitle>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowSettings(!showSettings)}
-                className="flex items-center gap-1 sm:gap-2 hover:bg-secondary/50 rounded-xl text-xs sm:text-sm"
-              >
-                {showSettings ? <ChevronUp className="h-3 w-3 sm:h-4 sm:w-4" /> : <ChevronDown className="h-3 w-3 sm:h-4 sm:w-4" />}
-                {showSettings ? 'Nascondi' : 'Mostra'}
-              </Button>
-            </CardHeader>
-            <AnimatePresence initial={false}>
-              {showSettings && (
-                <motion.div
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: 'auto', opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  transition={{ duration: 0.15 }}
-                >
-                  <CardContent className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-                    <div className="space-y-2">
-                      <Label className="text-muted-foreground text-sm">Stipendio Base</Label>
-                      <div className="relative">
-                        <Input
-                          type="number"
-                          value={parameters.stipendioBase}
-                          onChange={(e) => handleParameterChange('stipendioBase', e.target.value)}
-                          className="pl-8 modern-input"
-                        />
-                        <Euro className="absolute left-2 top-2.5 h-4 w-4 text-primary" />
-                      </div>
-                    </div>
-                    {[
-                      { label: 'Indennità Guida', key: 'indennitaGuida' },
-                      { label: 'Extra Mensa', key: 'extraMensa' },
-                      { label: 'FF', key: 'ff' },
-                      { label: 'FF Cena', key: 'ffCena' },
-                      { label: 'Reperibilità Feriale', key: 'reperibilitaFeriale' },
-                      { label: 'Reperibilità Sabato', key: 'reperibilitaSabato' },
-                      { label: 'Reperibilità Festivo', key: 'reperibilitaFestivo' }
-                    ].map(({ label, key }) => (
-                      <div key={key} className="space-y-2">
-                        <Label className="text-muted-foreground text-sm">{label}</Label>
-                        <Input
-                          type="number"
-                          value={parameters[key as keyof Parameters]}
-                          onChange={(e) => handleParameterChange(key, e.target.value)}
-                          className="modern-input"
-                        />
-                      </div>
-                    ))}
-                  </CardContent>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </Card>
 
           {/* Week Selector */}
           <div className="space-y-4">
@@ -401,38 +489,61 @@ export default function SalaryCalculator() {
                             </div>
 
                             {/* Overtime Inputs */}
-                            {['Diurno', 'Notturno', 'Festivo'].map((type) => {
-                              const key = `straordinario${type}` as keyof DayState;
-                              return (
-                                <div key={type} className="space-y-2">
-                                  <Label className="text-sm text-muted-foreground">
-                                    Straordinario {type}
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                              {[
+                                { 
+                                  label: 'Straordinario Diurno',
+                                  key: 'straordinarioDiurno' as const,
+                                  icon: <Sun className="h-4 w-4 text-yellow-500" />
+                                },
+                                { 
+                                  label: 'Straordinario Notturno',
+                                  key: 'straordinarioNotturno' as const,
+                                  icon: <Moon className="h-4 w-4 text-blue-500" />
+                                },
+                                { 
+                                  label: 'Straordinario Festivo',
+                                  key: 'straordinarioFestivo' as const,
+                                  icon: <Calendar className="h-4 w-4 text-red-500" />
+                                }
+                              ].map(({ label, key, icon }) => (
+                                <div key={key} className="space-y-2">
+                                  <Label className="text-sm text-muted-foreground flex items-center gap-2">
+                                    {icon} {label}
                                   </Label>
                                   <div className="flex gap-2">
                                     <div className="flex-1">
                                       <Input
                                         type="number"
-                                        placeholder="Ore"
                                         value={dayData[key].ore}
-                                        onClick={(e) => e.stopPropagation()}
-                                        onChange={(e) => handleDayChange(activeWeek, dayIndex, key, { ...dayData[key], ore: e.target.value })}
+                                        onChange={(e) => handleOvertimeChange(activeWeek, dayIndex, key, 'ore', e.target.value)}
+                                        placeholder="Ore"
                                         className="modern-input text-sm"
                                       />
                                     </div>
                                     <div className="flex-1">
                                       <Input
                                         type="number"
-                                        placeholder="Min"
                                         value={dayData[key].minuti}
-                                        onClick={(e) => e.stopPropagation()}
-                                        onChange={(e) => handleDayChange(activeWeek, dayIndex, key, { ...dayData[key], minuti: e.target.value })}
+                                        onChange={(e) => handleOvertimeChange(activeWeek, dayIndex, key, 'minuti', e.target.value)}
+                                        placeholder="Min"
                                         className="modern-input text-sm"
                                       />
                                     </div>
                                   </div>
                                 </div>
-                              );
-                            })}
+                              ))}
+                            </div>
+
+                            {/* Daily Salary */}
+                            <div className="pt-4 border-t">
+                              <div className="flex justify-between items-center">
+                                <span className="text-sm text-muted-foreground">Totale Giornaliero</span>
+                                <span className="text-lg font-semibold">
+                                  €{calculateDaySalary(activeWeek, dayIndex).toFixed(2)}
+                                </span>
+                              </div>
+                            </div>
                           </CardContent>
                         </motion.div>
                       )}
@@ -442,26 +553,31 @@ export default function SalaryCalculator() {
               })}
             </div>
           </div>
+
+          {/* Total Salary Display */}
+          <Card className="mb-6 modern-card">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">
+                Totale Stipendio
+              </CardTitle>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 text-xs"
+                onClick={() => setShowSettings(!showSettings)}
+              >
+                <Settings2 className="mr-2 h-3 w-3" />
+                {showSettings ? 'Nascondi' : 'Mostra'} Parametri
+              </Button>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl sm:text-3xl font-bold">€{totalSalary.toFixed(2)}</div>
+            </CardContent>
+          </Card>
         </div>
 
-        {/* Total Salary */}
-        <Card className="sticky bottom-4 glass-morphism animate-slow mt-6">
-          <CardHeader className="p-4">
-            <CardTitle className="flex items-center justify-between">
-              <span className="text-primary text-base sm:text-lg">Totale Stipendio</span>
-              <motion.span
-                key={totalSalary}
-                initial={{ scale: 1.1 }}
-                animate={{ scale: 1 }}
-                className="text-xl sm:text-2xl font-mono text-primary"
-              >
-                € {totalSalary.toFixed(2)}
-              </motion.span>
-            </CardTitle>
-          </CardHeader>
-        </Card>
       </div>
 
-    </div>
+    </main>
   )
 }

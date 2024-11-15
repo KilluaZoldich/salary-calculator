@@ -1,59 +1,59 @@
-import type { Metadata, Viewport } from "next";
-import localFont from "next/font/local";
-import "./globals.css";
+import type { Metadata, Viewport } from 'next'
+import { Inter } from 'next/font/google'
+import './globals.css'
+import { ToastProvider } from '@/components/ui/toast'
+import { DebugPanel } from '@/components/debug-panel'
 
-const geistSans = localFont({
-  src: "./fonts/GeistVF.woff",
-  variable: "--font-geist-sans",
-  weight: "100 900",
-});
+const inter = Inter({ subsets: ['latin'] })
 
-const geistMono = localFont({
-  src: "./fonts/GeistMonoVF.woff",
-  variable: "--font-geist-mono",
-  weight: "100 900",
-});
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  themeColor: '#000000',
+}
 
 export const metadata: Metadata = {
-  title: "Calcolatore Stipendio",
-  description: "Calcola il tuo stipendio con facilità",
-  manifest: "/manifest.json",
+  title: 'Salary Calculator',
+  description: 'Calculate your salary including overtime and allowances',
+  manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
-    statusBarStyle: "default",
-    title: "Calcolatore Stipendio",
+    statusBarStyle: 'default',
+    title: 'Salary Calculator',
   },
   formatDetection: {
     telephone: false,
-  }
+  },
+  other: {
+    'mobile-web-app-capable': 'yes',
+  },
 }
 
-export const viewport: Viewport = {
-  themeColor: "#020817",
-  width: "device-width",
-  initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
+type RootLayoutProps = {
+  children: React.ReactNode;
+  params: { locale: string };
 }
 
 export default function RootLayout({
   children,
-}: {
-  children: React.ReactNode;
-}) {
+  params: { locale = 'en' }
+}: RootLayoutProps) {
   return (
-    <html lang="it" suppressHydrationWarning>
+    <html lang={locale} suppressHydrationWarning>
       <head>
-        <link rel="apple-touch-icon" href="/icon-192.png" />
-        <link rel="apple-touch-icon" sizes="192x192" href="/icon-192.png" />
-        <link rel="apple-touch-icon" sizes="512x512" href="/icon-512.png" />
-        <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-        <meta name="apple-mobile-web-app-title" content="Calcolatore Stipendio" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="format-detection" content="telephone=no" />
+        <link rel="manifest" href="/manifest.json" />
       </head>
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen bg-background`}>
-        {children}
+      <body className={inter.className}>
+        <ToastProvider>
+          <div className="min-h-screen bg-background">
+            {children}
+            {process.env.NODE_ENV === 'development' && <DebugPanel />}
+          </div>
+        </ToastProvider>
       </body>
     </html>
-  );
+  )
 }
