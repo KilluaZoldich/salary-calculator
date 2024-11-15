@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, useMemo } from "react"
-import { Button } from "@/components/ui/button"; // Fixing the Button component import
+import { Button } from "@/components/ui/button"; 
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -330,7 +330,7 @@ Totale Salario: €${totaleSalario.toFixed(2)}
             <Button
               onClick={downloadReport}
               variant="default"
-              className="bg-green-600 hover:bg-green-700" // Fixing the Button component styling
+              className="bg-green-600 hover:bg-green-700" 
             >
               Scarica Report
             </Button>
