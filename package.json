@@ -2,17 +2,14 @@
   "name": "salary-calculator",
   "version": "0.1.0",
   "private": true,
-  "homepage": "https://killuazoldich.github.io/salary-calculator/",
   "scripts": {
-    "predeploy": "npm run build",
-    "deploy": "gh-pages -d build",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"
   },
   "dependencies": {
-    "@radix-ui/react-accordion": "^1.2.1",
+    "@radix-ui/react-accordion": "^1.1.2",
     "@radix-ui/react-label": "^2.1.0",
     "@radix-ui/react-select": "^2.1.2",
     "@radix-ui/react-slot": "^1.1.0",
@@ -32,7 +29,6 @@
     "tailwindcss-animate": "^1.0.7"
   },
   "devDependencies": {
-    "@netlify/plugin-nextjs": "^5.8.1",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
