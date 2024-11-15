@@ -4,7 +4,9 @@ const nextConfig = {
   images: {
     unoptimized: true
   },
-  basePath: '/salary-calculator'
+  basePath: '/salary-calculator',
+  assetPrefix: '/salary-calculator/',
+  trailingSlash: true
 }
 
 module.exports = nextConfig
