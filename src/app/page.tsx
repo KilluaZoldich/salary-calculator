@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useMemo } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -11,6 +11,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/lib/utils'
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { useLocalStorage } from "@/components/client-wrapper"
 
 type DayState = {
   presenza: boolean;
@@ -21,6 +22,17 @@ type DayState = {
   straordinarioDiurno: { ore: string; minuti: string };
   straordinarioNotturno: { ore: string; minuti: string };
   straordinarioFestivo: { ore: string; minuti: string };
+}
+
+type Parameters = {
+  stipendioBase: string;
+  indennitaGuida: string;
+  extraMensa: string;
+  ff: string;
+  ffCena: string;
+  reperibilitaFeriale: string;
+  reperibilitaSabato: string;
+  reperibilitaFestivo: string;
 }
 
 const days = ['Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato', 'Domenica']
@@ -36,7 +48,7 @@ const emptyDay: DayState = {
   straordinarioFestivo: { ore: '', minuti: '' }
 }
 
-const initialParameters = {
+const initialParameters: Parameters = {
   stipendioBase: '',
   indennitaGuida: '',
   extraMensa: '',
@@ -48,50 +60,22 @@ const initialParameters = {
 }
 
 export default function SalaryCalculator() {
-  // State management with localStorage persistence
-  const [parameters, setParameters] = useState(() => {
-    const saved = localStorage.getItem('salaryParameters')
-    return saved ? JSON.parse(saved) : initialParameters
-  })
-
-  const [weeks, setWeeks] = useState<DayState[][]>(() => {
-    const saved = localStorage.getItem('salaryWeeks')
-    return saved 
-      ? JSON.parse(saved)
-      : Array(4).fill(null).map(() => Array(7).fill(null).map(() => ({ ...emptyDay })))
-  })
-
-  const [activeWeek, setActiveWeek] = useState(0)
-  const [showSettings, setShowSettings] = useState(true)
+  const [parameters, setParameters] = useLocalStorage<Parameters>('salaryParameters', initialParameters)
+  const [weeks, setWeeks] = useLocalStorage('salaryWeeks', 
+    Array(4).fill(null).map(() => Array(7).fill(null).map(() => ({ ...emptyDay })))
+  )
+  const [activeWeek, setActiveWeek] = useLocalStorage('activeWeek', 0)
+  const [showSettings, setShowSettings] = useLocalStorage('showSettings', true)
   const [totalSalary, setTotalSalary] = useState(0)
-  const [darkMode, setDarkMode] = useState(false)
-  const [expandedDays, setExpandedDays] = useState<{ [key: number]: boolean }>({});
+  const [darkMode, setDarkMode] = useLocalStorage('darkMode', false)
+  const [expandedDays, setExpandedDays] = useState<{ [key: number]: boolean }>({})
 
   const toggleDay = (dayIndex: number) => {
     setExpandedDays(prev => ({
       ...prev,
       [dayIndex]: !prev[dayIndex]
-    }));
-  };
-
-  // Save data to localStorage whenever it changes
-  useEffect(() => {
-    localStorage.setItem('salaryParameters', JSON.stringify(parameters))
-    localStorage.setItem('salaryWeeks', JSON.stringify(weeks))
-  }, [parameters, weeks])
-
-  useEffect(() => {
-    const savedData = localStorage.getItem('salaryCalculatorData')
-    if (savedData) {
-      const { parameters: savedParameters, weeks: savedWeeks } = JSON.parse(savedData)
-      setParameters(savedParameters)
-      setWeeks(savedWeeks)
-    }
-  }, [])
-
-  useEffect(() => {
-    localStorage.setItem('salaryCalculatorData', JSON.stringify({ parameters, weeks }))
-  }, [parameters, weeks])
+    }))
+  }
 
   useEffect(() => {
     if (darkMode) {
@@ -101,88 +85,68 @@ export default function SalaryCalculator() {
     }
   }, [darkMode])
 
-  // Calculate total salary whenever data changes
-  useEffect(() => {
-    let total = 0
-    weeks.forEach((week, weekIndex) => {
-      week.forEach((day, dayIndex) => {
-        if (day.presenza) {
-          // Base salary for standard day (7h36m = 7.6 hours)
-          const baseHourlyRate = parseFloat(parameters.stipendioBase) || 0
-          total += baseHourlyRate * 7.6
-
-          // Driving allowance
-          if (day.guida) {
-            total += parseFloat(parameters.indennitaGuida) || 0
-          }
-
-          // Extra/FF allowances
-          if (day.extraFF === 'extraMensa') {
-            total += parseFloat(parameters.extraMensa) || 0
-          } else if (day.extraFF === 'ff') {
-            total += parseFloat(parameters.ff) || 0
-          }
-
-          // FF Dinner allowance
-          if (day.ffCena) {
-            total += parseFloat(parameters.ffCena) || 0
-          }
-
-          // On-call duty based on day type
-          if (day.reperibilita) {
-            if (dayIndex === 5) { // Saturday
-              total += parseFloat(parameters.reperibilitaSabato) || 0
-            } else if (dayIndex === 6) { // Sunday
-              total += parseFloat(parameters.reperibilitaFestivo) || 0
-            } else { // Weekday
-              total += parseFloat(parameters.reperibilitaFeriale) || 0
-            }
-          }
-
-          // Overtime calculations
-          const calculateOvertime = (hours: string, minutes: string) => {
-            return (parseFloat(hours) || 0) + ((parseFloat(minutes) || 0) / 60)
-          }
-
-          // Regular overtime (15% increase)
-          const regularOT = calculateOvertime(
-            day.straordinarioDiurno.ore,
-            day.straordinarioDiurno.minuti
-          )
-          total += regularOT * baseHourlyRate * 1.15
-
-          // Night overtime (30% increase)
-          const nightOT = calculateOvertime(
-            day.straordinarioNotturno.ore,
-            day.straordinarioNotturno.minuti
-          )
-          total += nightOT * baseHourlyRate * 1.3
-
-          // Holiday overtime (40% increase)
-          const holidayOT = calculateOvertime(
-            day.straordinarioFestivo.ore,
-            day.straordinarioFestivo.minuti
-          )
-          total += holidayOT * baseHourlyRate * 1.4
-        }
-      })
-    })
-    setTotalSalary(total)
-  }, [weeks, parameters]) // Ricalcola automaticamente quando cambiano i dati
-
-  const handleParameterChange = (key: keyof typeof parameters, value: string) => {
-    setParameters(prev => ({ ...prev, [key]: value }))
+  const handleParameterChange = (key: keyof Parameters, value: string) => {
+    setParameters((prev: Parameters) => ({ ...prev, [key]: value }));
   }
 
   const handleDayChange = (weekIndex: number, dayIndex: number, field: keyof DayState, value: any) => {
-    const newWeeks = [...weeks]
-    if (field === 'straordinarioDiurno' || field === 'straordinarioNotturno' || field === 'straordinarioFestivo') {
-      newWeeks[weekIndex][dayIndex][field] = { ...newWeeks[weekIndex][dayIndex][field], ...value }
-    } else {
-      newWeeks[weekIndex][dayIndex][field] = value
-    }
-    setWeeks(newWeeks)
-  }
+    setWeeks((prev: DayState[][]) => {
+      const newWeeks = [...prev];
+      if (field === 'straordinarioDiurno' || field === 'straordinarioNotturno' || field === 'straordinarioFestivo') {
+        newWeeks[weekIndex][dayIndex] = {
+          ...newWeeks[weekIndex][dayIndex],
+          [field]: { ...newWeeks[weekIndex][dayIndex][field], ...value }
+        };
+      } else {
+        newWeeks[weekIndex][dayIndex] = {
+          ...newWeeks[weekIndex][dayIndex],
+          [field]: value
+        };
+      }
+      return newWeeks;
+    });
+  };
+
+  const calculateTotalSalary = useMemo(() => {
+    let total = 0;
+    weeks.forEach((week) => {
+      week.forEach((day, dayIndex) => {
+        if (day.presenza) {
+          const baseHourlyRate = parseFloat(parameters.stipendioBase) || 0;
+          total += baseHourlyRate * 7.6;
+
+          if (day.guida) total += parseFloat(parameters.indennitaGuida) || 0;
+          if (day.extraFF === 'extraMensa') total += parseFloat(parameters.extraMensa) || 0;
+          if (day.extraFF === 'ff') total += parseFloat(parameters.ff) || 0;
+          if (day.ffCena) total += parseFloat(parameters.ffCena) || 0;
+
+          if (day.reperibilita) {
+            total += parseFloat(
+              dayIndex === 5 ? parameters.reperibilitaSabato :
+              dayIndex === 6 ? parameters.reperibilitaFestivo :
+              parameters.reperibilitaFeriale
+            ) || 0;
+          }
+
+          const calculateOvertime = (hours: string, minutes: string) => 
+            (parseFloat(hours) || 0) + ((parseFloat(minutes) || 0) / 60);
+
+          const regularOT = calculateOvertime(day.straordinarioDiurno.ore, day.straordinarioDiurno.minuti);
+          const nightOT = calculateOvertime(day.straordinarioNotturno.ore, day.straordinarioNotturno.minuti);
+          const holidayOT = calculateOvertime(day.straordinarioFestivo.ore, day.straordinarioFestivo.minuti);
+
+          total += regularOT * baseHourlyRate * 1.15;
+          total += nightOT * baseHourlyRate * 1.3;
+          total += holidayOT * baseHourlyRate * 1.4;
+        }
+      });
+    });
+    return total;
+  }, [weeks, parameters]);
+
+  useEffect(() => {
+    setTotalSalary(calculateTotalSalary);
+  }, [calculateTotalSalary]);
 
   return (
     <div className="min-h-screen w-full bg-background text-foreground overflow-x-hidden">
@@ -272,7 +236,7 @@ export default function SalaryCalculator() {
                         <Label className="text-muted-foreground text-sm">{label}</Label>
                         <Input
                           type="number"
-                          value={parameters[key as keyof typeof parameters]}
+                          value={parameters[key as keyof Parameters]}
                           onChange={(e) => handleParameterChange(key, e.target.value)}
                           className="modern-input"
                         />
@@ -497,6 +461,7 @@ export default function SalaryCalculator() {
           </CardHeader>
         </Card>
       </div>
+
     </div>
   )
 }

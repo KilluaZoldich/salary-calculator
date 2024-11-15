@@ -78,12 +78,12 @@
 
 /* Modern Card Styles */
 .modern-card {
-  @apply bg-card/80 backdrop-blur-lg border border-border/50 shadow-lg;
+  @apply bg-card/80 backdrop-blur-lg border border-border/50 shadow-lg transform-gpu;
 }
 
 /* Glass Morphism */
 .glass-morphism {
-  @apply bg-background/80 backdrop-blur-lg border border-border/50;
+  @apply bg-background/80 backdrop-blur-lg border border-border/50 transform-gpu;
   box-shadow: 
     0 4px 12px rgba(0, 0, 0, 0.1),
     0 20px 40px -12px rgba(0, 0, 0, 0.2);
@@ -97,11 +97,11 @@
 
 /* Hover Card */
 .hover-card {
-  @apply transition-all duration-300;
+  @apply transition-all duration-300 will-change-transform;
 }
 
 .hover-card:hover {
-  @apply transform -translate-y-1;
+  @apply transform-gpu -translate-y-1;
   box-shadow: 
     0 10px 40px -12px rgba(0, 0, 0, 0.2);
 }
@@ -137,9 +137,9 @@
   box-shadow: 0 0 10px var(--primary);
 }
 
-/* Animations */
+/* Optimized Animations */
 .animate-slow {
-  @apply transition-all duration-300;
+  @apply transition-all duration-300 will-change-transform;
 }
 
 /* Switch Track */
