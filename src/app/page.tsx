@@ -519,15 +519,18 @@ export default function SalaryCalculator() {
                               <Label htmlFor={`presenza-${dayIndex}`}>Presenza</Label>
                             </div>
 
-                            <div className="flex items-center space-x-2">
-                              <Switch
-                                id={`guida-${dayIndex}`}
-                                checked={dayData.guida}
-                                onCheckedChange={(checked) =>
-                                  handleDayChange(activeWeek, dayIndex, 'guida', checked)
-                                }
-                              />
-                              <Label htmlFor={`guida-${dayIndex}`}>Guida</Label>
+                            <div className="flex items-center">
+                              <Button
+                                variant={dayData.guida ? "default" : "outline"}
+                                size="sm"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDayChange(activeWeek, dayIndex, 'guida', !dayData.guida);
+                                }}
+                                className="text-xs h-7 w-full"
+                              >
+                                Guida
+                              </Button>
                             </div>
 
                             <div className="flex items-center space-x-2">
@@ -552,26 +555,32 @@ export default function SalaryCalculator() {
                               <Label htmlFor={`ff-${dayIndex}`}>FF</Label>
                             </div>
 
-                            <div className="flex items-center space-x-2">
-                              <Switch
-                                id={`reperibilita-${dayIndex}`}
-                                checked={dayData.reperibilita}
-                                onCheckedChange={(checked) =>
-                                  handleDayChange(activeWeek, dayIndex, 'reperibilita', checked)
-                                }
-                              />
-                              <Label htmlFor={`reperibilita-${dayIndex}`}>Reperibilità</Label>
+                            <div className="flex items-center">
+                              <Button
+                                variant={dayData.reperibilita ? "default" : "outline"}
+                                size="sm"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDayChange(activeWeek, dayIndex, 'reperibilita', !dayData.reperibilita);
+                                }}
+                                className="text-xs h-7 w-full"
+                              >
+                                Reperibilità
+                              </Button>
                             </div>
 
-                            <div className="flex items-center space-x-2">
-                              <Switch
-                                id={`ffCena-${dayIndex}`}
-                                checked={dayData.ffCena}
-                                onCheckedChange={(checked) =>
-                                  handleDayChange(activeWeek, dayIndex, 'ffCena', checked)
-                                }
-                              />
-                              <Label htmlFor={`ffCena-${dayIndex}`}>FF Cena</Label>
+                            <div className="flex items-center">
+                              <Button
+                                variant={dayData.ffCena ? "default" : "outline"}
+                                size="sm"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDayChange(activeWeek, dayIndex, 'ffCena', !dayData.ffCena);
+                                }}
+                                className="text-xs h-7 w-full"
+                              >
+                                FF Cena
+                              </Button>
                             </div>
                           </div>
 
