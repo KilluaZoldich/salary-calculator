@@ -26,6 +26,7 @@ type DayState = {
   ff: boolean;
   reperibilita: boolean;
   ffCena: boolean;
+  presenza: boolean;
   straordinarioDiurno: TimeEntry;
   straordinarioNotturno: TimeEntry;
   straordinarioFestivo: TimeEntry;
@@ -50,6 +51,7 @@ const initialDay: DayState = {
   ff: false,
   reperibilita: false,
   ffCena: false,
+  presenza: false,
   straordinarioDiurno: { ore: "0", minuti: "0" },
   straordinarioNotturno: { ore: "0", minuti: "0" },
   straordinarioFestivo: { ore: "0", minuti: "0" }
@@ -480,6 +482,15 @@ export default function SalaryCalculator() {
                           {day}
                         </span>
                       </div>
+                      <Switch
+                        checked={dayData.presenza}
+                        onCheckedChange={(checked) => {
+                          handleDayChange(activeWeek, dayIndex, 'presenza', checked);
+                          if (checked) setExpandedDays(prev => ({ ...prev, [dayIndex]: true }));
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                        className="data-[state=checked]:bg-green-500"
+                      />
                     </div>
                   </CardHeader>
 
