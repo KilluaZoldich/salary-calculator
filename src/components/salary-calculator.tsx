@@ -97,7 +97,111 @@ export default function SalaryCalculator() {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      {/* Your existing JSX here */}
+      <div>
+        <Accordion.Item value="base">
+          <AccordionTrigger>Parametri Base</AccordionTrigger>
+          <AccordionContent>
+            <div className="space-y-4">
+              <div className="relative">
+                <label className="block text-sm font-medium mb-1">Stipendio Base</label>
+                <div className="relative">
+                  <Input
+                    type="number"
+                    value={parameters.stipendioBase}
+                    onChange={(e) => setParameters({ ...parameters, stipendioBase: e.target.value })}
+                    className="w-full p-2 border rounded pl-7"
+                  />
+                  <span className="absolute left-2 top-1/2 transform -translate-y-1/2">€</span>
+                </div>
+              </div>
+              <div className="relative">
+                <label className="block text-sm font-medium mb-1">Indennità Guida</label>
+                <div className="relative">
+                  <Input
+                    type="number"
+                    value={parameters.indennitaGuida}
+                    onChange={(e) => setParameters({ ...parameters, indennitaGuida: e.target.value })}
+                    className="w-full p-2 border rounded pl-7"
+                  />
+                  <span className="absolute left-2 top-1/2 transform -translate-y-1/2">€</span>
+                </div>
+              </div>
+              <div className="relative">
+                <label className="block text-sm font-medium mb-1">Extra Mensa</label>
+                <div className="relative">
+                  <Input
+                    type="number"
+                    value={parameters.extraMensa}
+                    onChange={(e) => setParameters({ ...parameters, extraMensa: e.target.value })}
+                    className="w-full p-2 border rounded pl-7"
+                  />
+                  <span className="absolute left-2 top-1/2 transform -translate-y-1/2">€</span>
+                </div>
+              </div>
+              <div className="relative">
+                <label className="block text-sm font-medium mb-1">FF</label>
+                <div className="relative">
+                  <Input
+                    type="number"
+                    value={parameters.ff}
+                    onChange={(e) => setParameters({ ...parameters, ff: e.target.value })}
+                    className="w-full p-2 border rounded pl-7"
+                  />
+                  <span className="absolute left-2 top-1/2 transform -translate-y-1/2">€</span>
+                </div>
+              </div>
+              <div className="relative">
+                <label className="block text-sm font-medium mb-1">FF Cena</label>
+                <div className="relative">
+                  <Input
+                    type="number"
+                    value={parameters.ffCena}
+                    onChange={(e) => setParameters({ ...parameters, ffCena: e.target.value })}
+                    className="w-full p-2 border rounded pl-7"
+                  />
+                  <span className="absolute left-2 top-1/2 transform -translate-y-1/2">€</span>
+                </div>
+              </div>
+              <div className="relative">
+                <label className="block text-sm font-medium mb-1">Reperibilità Feriale</label>
+                <div className="relative">
+                  <Input
+                    type="number"
+                    value={parameters.reperibilitaFeriale}
+                    onChange={(e) => setParameters({ ...parameters, reperibilitaFeriale: e.target.value })}
+                    className="w-full p-2 border rounded pl-7"
+                  />
+                  <span className="absolute left-2 top-1/2 transform -translate-y-1/2">€</span>
+                </div>
+              </div>
+              <div className="relative">
+                <label className="block text-sm font-medium mb-1">Reperibilità Sabato</label>
+                <div className="relative">
+                  <Input
+                    type="number"
+                    value={parameters.reperibilitaSabato}
+                    onChange={(e) => setParameters({ ...parameters, reperibilitaSabato: e.target.value })}
+                    className="w-full p-2 border rounded pl-7"
+                  />
+                  <span className="absolute left-2 top-1/2 transform -translate-y-1/2">€</span>
+                </div>
+              </div>
+              <div className="relative">
+                <label className="block text-sm font-medium mb-1">Reperibilità Festivo</label>
+                <div className="relative">
+                  <Input
+                    type="number"
+                    value={parameters.reperibilitaFestivo}
+                    onChange={(e) => setParameters({ ...parameters, reperibilitaFestivo: e.target.value })}
+                    className="w-full p-2 border rounded pl-7"
+                  />
+                  <span className="absolute left-2 top-1/2 transform -translate-y-1/2">€</span>
+                </div>
+              </div>
+            </div>
+          </AccordionContent>
+        </Accordion.Item>
+      </div>
       <div>Work in progress...</div>
     </div>
   );
