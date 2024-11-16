@@ -21,7 +21,6 @@ type TimeEntry = {
 };
 
 type DayState = {
-  presenza: boolean;
   guida: boolean;
   extraMensa: boolean;
   ff: boolean;
@@ -46,7 +45,6 @@ type Parameters = {
 const days = ['Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato', 'Domenica']
 
 const initialDay: DayState = {
-  presenza: false,
   guida: false,
   extraMensa: false,
   ff: false,
@@ -151,7 +149,7 @@ export default function SalaryCalculator() {
     // Base salary calculation for standard work day (7 hours and 36 minutes = 7.6 hours)
     const STANDARD_DAILY_HOURS = 7.6;
     const hourlyRate = getNumericValue(parameters.stipendioBase);
-    let salary = day.presenza ? hourlyRate * STANDARD_DAILY_HOURS : 0;
+    let salary = 0;
 
     // Add guida compensation
     if (day.guida) {
@@ -230,7 +228,6 @@ export default function SalaryCalculator() {
     const week = weeks[weekIndex];
     if (!week) return [];
 
-    let presenze = 0;
     let guide = 0;
     let straordinariDiurni = 0;
     let straordinariNotturni = 0;
@@ -242,7 +239,6 @@ export default function SalaryCalculator() {
     let totaleSalario = 0;
 
     week.forEach((day, dayIndex) => {
-      if (day.presenza) presenze++;
       if (day.guida) guide++;
       if (day.extraMensa) extraMensa++;
       if (day.ff) ff++;
@@ -278,7 +274,6 @@ export default function SalaryCalculator() {
     const lines = []
     lines.push(`Riepilogo Settimana ${weekIndex + 1}:`)
     lines.push(`------------------------`)
-    lines.push(`Presenze: ${presenze} giorni`)
     lines.push(`Guide: ${guide} giorni`)
     lines.push(`Straordinari:`)
     lines.push(`  - Diurni: ${(straordinariDiurni / 60).toFixed(1)} ore`)
@@ -421,7 +416,7 @@ export default function SalaryCalculator() {
             <TabsList className="week-tabs-list">
               {Array.from({ length: 4 }, (_, i) => {
                 const hasData = weeks[i].some(day => 
-                  day.presenza || day.guida || day.extraMensa || 
+                  day.guida || day.extraMensa || 
                   day.reperibilita || day.ffCena ||
                   (day.straordinarioDiurno.ore !== '' || day.straordinarioDiurno.minuti !== '') ||
                   (day.straordinarioNotturno.ore !== '' || day.straordinarioNotturno.minuti !== '') ||
@@ -463,7 +458,7 @@ export default function SalaryCalculator() {
                   className={cn(
                     "overflow-hidden transition-all duration-300 modern-card hover-card",
                     isWeekend && "border-orange-500/20",
-                    dayData.presenza && "border-green-500/50 bg-green-500/5"
+                    dayData.guida && "border-green-500/50 bg-green-500/5"
                   )}
                 >
                   <CardHeader 
@@ -485,15 +480,6 @@ export default function SalaryCalculator() {
                           {day}
                         </span>
                       </div>
-                      <Switch
-                        checked={dayData.presenza}
-                        onCheckedChange={(checked) => {
-                          handleDayChange(activeWeek, dayIndex, 'presenza', checked);
-                          if (checked) setExpandedDays(prev => ({ ...prev, [dayIndex]: true }));
-                        }}
-                        onClick={(e) => e.stopPropagation()}
-                        className="data-[state=checked]:bg-green-500"
-                      />
                     </div>
                   </CardHeader>
 
@@ -508,17 +494,6 @@ export default function SalaryCalculator() {
                         <CardContent className="space-y-4 p-4 pt-0">
                           {/* Day Options */}
                           <div className="grid grid-cols-2 gap-4 mb-4">
-                            <div className="flex items-center space-x-2">
-                              <Switch
-                                id={`presenza-${dayIndex}`}
-                                checked={dayData.presenza}
-                                onCheckedChange={(checked) =>
-                                  handleDayChange(activeWeek, dayIndex, 'presenza', checked)
-                                }
-                              />
-                              <Label htmlFor={`presenza-${dayIndex}`}>Presenza</Label>
-                            </div>
-
                             <div className="flex items-center">
                               <Button
                                 variant={dayData.guida ? "default" : "outline"}
@@ -533,26 +508,32 @@ export default function SalaryCalculator() {
                               </Button>
                             </div>
 
-                            <div className="flex items-center space-x-2">
-                              <Switch
-                                id={`extraMensa-${dayIndex}`}
-                                checked={dayData.extraMensa}
-                                onCheckedChange={(checked) =>
-                                  handleDayChange(activeWeek, dayIndex, 'extraMensa', checked)
-                                }
-                              />
-                              <Label htmlFor={`extraMensa-${dayIndex}`}>Extra Mensa</Label>
+                            <div className="flex items-center">
+                              <Button
+                                variant={dayData.extraMensa ? "default" : "outline"}
+                                size="sm"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDayChange(activeWeek, dayIndex, 'extraMensa', !dayData.extraMensa);
+                                }}
+                                className="text-xs h-7 w-full"
+                              >
+                                Extra Mensa
+                              </Button>
                             </div>
 
-                            <div className="flex items-center space-x-2">
-                              <Switch
-                                id={`ff-${dayIndex}`}
-                                checked={dayData.ff}
-                                onCheckedChange={(checked) =>
-                                  handleDayChange(activeWeek, dayIndex, 'ff', checked)
-                                }
-                              />
-                              <Label htmlFor={`ff-${dayIndex}`}>FF</Label>
+                            <div className="flex items-center">
+                              <Button
+                                variant={dayData.ff ? "default" : "outline"}
+                                size="sm"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDayChange(activeWeek, dayIndex, 'ff', !dayData.ff);
+                                }}
+                                className="text-xs h-7 w-full"
+                              >
+                                FF
+                              </Button>
                             </div>
 
                             <div className="flex items-center">
