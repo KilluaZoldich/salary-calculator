@@ -14,7 +14,8 @@ import { cn } from "@/lib/utils";
 type DayState = {
   presenza: boolean;
   guida: boolean;
-  extraFF: 'none' | 'extraMensa' | 'ff';
+  extraMensa: boolean;
+  ff: boolean;
   reperibilita: boolean;
   ffCena: boolean;
   straordinarioDiurno: { ore: string; minuti: string };
@@ -47,7 +48,8 @@ const initialParameters: Parameters = {
 const initialDay: DayState = {
   presenza: false,
   guida: false,
-  extraFF: 'none',
+  extraMensa: false,
+  ff: false,
   reperibilita: false,
   ffCena: false,
   straordinarioDiurno: { ore: "0", minuti: "0" },

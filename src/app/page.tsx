@@ -23,7 +23,8 @@ type TimeEntry = {
 type DayState = {
   presenza: boolean;
   guida: boolean;
-  extraFF: 'none' | 'extraMensa' | 'ff';
+  extraMensa: boolean;
+  ff: boolean;
   reperibilita: boolean;
   ffCena: boolean;
   straordinarioDiurno: TimeEntry;
@@ -44,15 +45,16 @@ type Parameters = {
 
 const days = ['Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato', 'Domenica']
 
-const emptyDay: DayState = {
+const initialDay: DayState = {
   presenza: false,
   guida: false,
-  extraFF: 'none',
+  extraMensa: false,
+  ff: false,
   reperibilita: false,
   ffCena: false,
-  straordinarioDiurno: { ore: '', minuti: '' },
-  straordinarioNotturno: { ore: '', minuti: '' },
-  straordinarioFestivo: { ore: '', minuti: '' }
+  straordinarioDiurno: { ore: "0", minuti: "0" },
+  straordinarioNotturno: { ore: "0", minuti: "0" },
+  straordinarioFestivo: { ore: "0", minuti: "0" }
 }
 
 const initialParameters: Parameters = {
@@ -69,7 +71,7 @@ const initialParameters: Parameters = {
 export default function SalaryCalculator() {
   const [parameters, setParameters] = useLocalStorage<Parameters>('salaryParameters', initialParameters)
   const [weeks, setWeeks] = useLocalStorage('salaryWeeks', 
-    Array(4).fill(null).map(() => Array(7).fill(null).map(() => ({ ...emptyDay })))
+    Array(4).fill(null).map(() => Array(7).fill(null).map(() => ({ ...initialDay })))
   )
   const [activeWeek, setActiveWeek] = useLocalStorage('activeWeek', 0)
   const [showSettings, setShowSettings] = useLocalStorage('showSettings', true)
@@ -157,9 +159,9 @@ export default function SalaryCalculator() {
     }
 
     // Add extra/FF compensation
-    if (day.extraFF === 'extraMensa') {
+    if (day.extraMensa) {
       salary += getNumericValue(parameters.extraMensa);
-    } else if (day.extraFF === 'ff') {
+    } else if (day.ff) {
       salary += getNumericValue(parameters.ff);
     }
 
@@ -242,8 +244,8 @@ export default function SalaryCalculator() {
     week.forEach((day, dayIndex) => {
       if (day.presenza) presenze++;
       if (day.guida) guide++;
-      if (day.extraFF === 'extraMensa') extraMensa++;
-      if (day.extraFF === 'ff') ff++;
+      if (day.extraMensa) extraMensa++;
+      if (day.ff) ff++;
       if (day.ffCena) ffCena++;
       if (day.reperibilita) reperibilita++;
 
@@ -356,7 +358,7 @@ export default function SalaryCalculator() {
   };
 
   const resetCalculator = () => {
-    setWeeks(Array(4).fill(null).map(() => Array(7).fill(null).map(() => ({ ...emptyDay }))))
+    setWeeks(Array(4).fill(null).map(() => Array(7).fill(null).map(() => ({ ...initialDay }))))
     setActiveWeek(0)
     setExpandedDays({})
   }
@@ -419,7 +421,7 @@ export default function SalaryCalculator() {
             <TabsList className="week-tabs-list">
               {Array.from({ length: 4 }, (_, i) => {
                 const hasData = weeks[i].some(day => 
-                  day.presenza || day.guida || day.extraFF !== 'none' || 
+                  day.presenza || day.guida || day.extraMensa || 
                   day.reperibilita || day.ffCena ||
                   (day.straordinarioDiurno.ore !== '' || day.straordinarioDiurno.minuti !== '') ||
                   (day.straordinarioNotturno.ore !== '' || day.straordinarioNotturno.minuti !== '') ||
@@ -505,60 +507,72 @@ export default function SalaryCalculator() {
                       >
                         <CardContent className="space-y-4 p-4 pt-0">
                           {/* Day Options */}
-                          <div className="flex flex-wrap gap-2">
-                            <Button
-                              variant={dayData.guida ? "default" : "outline"}
-                              size="sm"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleDayChange(activeWeek, dayIndex, 'guida', !dayData.guida);
-                              }}
-                              className="text-xs h-7"
-                            >
-                              Guida
-                            </Button>
-                            <Button
-                              variant={dayData.reperibilita ? "default" : "outline"}
-                              size="sm"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleDayChange(activeWeek, dayIndex, 'reperibilita', !dayData.reperibilita);
-                              }}
-                              className="text-xs h-7"
-                            >
-                              Reperibilità
-                            </Button>
-                            <Button
-                              variant={dayData.ffCena ? "default" : "outline"}
-                              size="sm"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleDayChange(activeWeek, dayIndex, 'ffCena', !dayData.ffCena);
-                              }}
-                              className="text-xs h-7"
-                            >
-                              FF Cena
-                            </Button>
-                          </div>
+                          <div className="grid grid-cols-2 gap-4 mb-4">
+                            <div className="flex items-center space-x-2">
+                              <Switch
+                                id={`presenza-${dayIndex}`}
+                                checked={dayData.presenza}
+                                onCheckedChange={(checked) =>
+                                  handleDayChange(activeWeek, dayIndex, 'presenza', checked)
+                                }
+                              />
+                              <Label htmlFor={`presenza-${dayIndex}`}>Presenza</Label>
+                            </div>
 
-                          {/* Extra FF Select */}
-                          <div className="space-y-2">
-                            <Label className="text-sm text-muted-foreground">Extra/FF</Label>
-                            <Select
-                              value={dayData.extraFF}
-                              onValueChange={(value: 'none' | 'extraMensa' | 'ff') => 
-                                handleDayChange(activeWeek, dayIndex, 'extraFF', value)
-                              }
-                            >
-                              <SelectTrigger className="modern-input text-sm">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="none">Nessuno</SelectItem>
-                                <SelectItem value="extraMensa">Extra Mensa</SelectItem>
-                                <SelectItem value="ff">FF</SelectItem>
-                              </SelectContent>
-                            </Select>
+                            <div className="flex items-center space-x-2">
+                              <Switch
+                                id={`guida-${dayIndex}`}
+                                checked={dayData.guida}
+                                onCheckedChange={(checked) =>
+                                  handleDayChange(activeWeek, dayIndex, 'guida', checked)
+                                }
+                              />
+                              <Label htmlFor={`guida-${dayIndex}`}>Guida</Label>
+                            </div>
+
+                            <div className="flex items-center space-x-2">
+                              <Switch
+                                id={`extraMensa-${dayIndex}`}
+                                checked={dayData.extraMensa}
+                                onCheckedChange={(checked) =>
+                                  handleDayChange(activeWeek, dayIndex, 'extraMensa', checked)
+                                }
+                              />
+                              <Label htmlFor={`extraMensa-${dayIndex}`}>Extra Mensa</Label>
+                            </div>
+
+                            <div className="flex items-center space-x-2">
+                              <Switch
+                                id={`ff-${dayIndex}`}
+                                checked={dayData.ff}
+                                onCheckedChange={(checked) =>
+                                  handleDayChange(activeWeek, dayIndex, 'ff', checked)
+                                }
+                              />
+                              <Label htmlFor={`ff-${dayIndex}`}>FF</Label>
+                            </div>
+
+                            <div className="flex items-center space-x-2">
+                              <Switch
+                                id={`reperibilita-${dayIndex}`}
+                                checked={dayData.reperibilita}
+                                onCheckedChange={(checked) =>
+                                  handleDayChange(activeWeek, dayIndex, 'reperibilita', checked)
+                                }
+                              />
+                              <Label htmlFor={`reperibilita-${dayIndex}`}>Reperibilità</Label>
+                            </div>
+
+                            <div className="flex items-center space-x-2">
+                              <Switch
+                                id={`ffCena-${dayIndex}`}
+                                checked={dayData.ffCena}
+                                onCheckedChange={(checked) =>
+                                  handleDayChange(activeWeek, dayIndex, 'ffCena', checked)
+                                }
+                              />
+                              <Label htmlFor={`ffCena-${dayIndex}`}>FF Cena</Label>
+                            </div>
                           </div>
 
                           {/* Overtime Inputs */}
