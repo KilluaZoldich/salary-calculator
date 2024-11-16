@@ -142,88 +142,91 @@ export default function SalaryCalculator() {
     const day = weeks[week]?.[dayIndex];
     if (!day) return 0;
 
-    // Ensure all parameters are valid numbers, default to 0 if invalid
-    const getNumericValue = (value: string) => {
-      const parsed = parseFloat(value);
-      return isNaN(parsed) ? 0 : parsed;
-    };
+    const calculateDailySalary = (day: DayState): number => {
+      const getNumericValue = (value: string): number => {
+        const numericValue = parseFloat(value);
+        return isNaN(numericValue) ? 0 : numericValue;
+      };
 
-    // Base salary calculation for standard work day (7 hours and 36 minutes = 7.6 hours)
-    const STANDARD_DAILY_HOURS = 7.6;
-    const hourlyRate = getNumericValue(parameters.stipendioBase);
-    let salary = 0;
+      // Base salary calculation for standard work day (7 hours and 36 minutes = 7.6 hours)
+      const STANDARD_DAILY_HOURS = 7.6;
+      const hourlyRate = getNumericValue(parameters.stipendioBase) / (STANDARD_DAILY_HOURS * 22); // Diviso per ore giornaliere e giorni lavorativi
+      let salary = day.presenza ? hourlyRate * STANDARD_DAILY_HOURS * 22 / 22 : 0; // Moltiplico e divido per 22 per ottenere la paga giornaliera
 
-    // Add guida compensation
-    if (day.guida) {
-      salary += getNumericValue(parameters.indennitaGuida);
-    }
-
-    // Add extra/FF compensation
-    if (day.extraMensa) {
-      salary += getNumericValue(parameters.extraMensa);
-    } else if (day.ff) {
-      salary += getNumericValue(parameters.ff);
-    }
-
-    // Add FF Cena
-    if (day.ffCena) {
-      salary += getNumericValue(parameters.ffCena);
-    }
-
-    // Add reperibilità based on day type
-    if (day.reperibilita) {
-      if (dayIndex === 5) { // Saturday
-        salary += getNumericValue(parameters.reperibilitaSabato);
-      } else if (dayIndex === 6) { // Sunday
-        salary += getNumericValue(parameters.reperibilitaFestivo);
-      } else { // Weekday
-        salary += getNumericValue(parameters.reperibilitaFeriale);
+      // Add guida compensation
+      if (day.guida) {
+        salary += getNumericValue(parameters.indennitaGuida);
       }
-    }
 
-    // Calculate overtime
-    const calculateOvertimeMinutes = (ore: string, minuti: string): number => {
-      const hours = parseInt(ore) || 0;
-      const minutes = parseInt(minuti) || 0;
-      return hours * 60 + minutes;
+      // Add extra/FF compensation
+      if (day.extraMensa) {
+        salary += getNumericValue(parameters.extraMensa);
+      } else if (day.ff) {
+        salary += getNumericValue(parameters.ff);
+      }
+
+      // Add FF Cena
+      if (day.ffCena) {
+        salary += getNumericValue(parameters.ffCena);
+      }
+
+      // Add reperibilità based on day type
+      if (day.reperibilita) {
+        if (dayIndex === 5) { // Saturday
+          salary += getNumericValue(parameters.reperibilitaSabato);
+        } else if (dayIndex === 6) { // Sunday
+          salary += getNumericValue(parameters.reperibilitaFestivo);
+        } else { // Weekday
+          salary += getNumericValue(parameters.reperibilitaFeriale);
+        }
+      }
+
+      // Calculate overtime
+      const calculateOvertimeMinutes = (ore: string, minuti: string): number => {
+        const hours = parseInt(ore) || 0;
+        const minutes = parseInt(minuti) || 0;
+        return hours * 60 + minutes;
+      };
+
+      // Calcola la maggiorazione oraria in base allo stipendio base
+      const calculateOvertimeRate = (baseRate: number, percentage: number): number => {
+        return baseRate + (baseRate * percentage);
+      };
+
+      // Diurno overtime (maggiorazione 25%)
+      const diurnoMinutes = calculateOvertimeMinutes(
+        day.straordinarioDiurno?.ore || '0',
+        day.straordinarioDiurno?.minuti || '0'
+      );
+      if (diurnoMinutes > 0) {
+        const overtimeRate = calculateOvertimeRate(hourlyRate, 0.25);
+        salary += (diurnoMinutes / 60) * overtimeRate;
+      }
+
+      // Notturno overtime (maggiorazione 40%)
+      const notturnoMinutes = calculateOvertimeMinutes(
+        day.straordinarioNotturno?.ore || '0',
+        day.straordinarioNotturno?.minuti || '0'
+      );
+      if (notturnoMinutes > 0) {
+        const overtimeRate = calculateOvertimeRate(hourlyRate, 0.40);
+        salary += (notturnoMinutes / 60) * overtimeRate;
+      }
+
+      // Festivo overtime (maggiorazione 50%)
+      const festivoMinutes = calculateOvertimeMinutes(
+        day.straordinarioFestivo?.ore || '0',
+        day.straordinarioFestivo?.minuti || '0'
+      );
+      if (festivoMinutes > 0) {
+        const overtimeRate = calculateOvertimeRate(hourlyRate, 0.50);
+        salary += (festivoMinutes / 60) * overtimeRate;
+      }
+
+      return Number(salary.toFixed(2));
     };
 
-    // Calcola la maggiorazione oraria in base allo stipendio base
-    const calculateOvertimeRate = (baseRate: number, percentage: number): number => {
-      return baseRate + (baseRate * percentage);
-    };
-
-    // Diurno overtime (maggiorazione 25%)
-    const diurnoMinutes = calculateOvertimeMinutes(
-      day.straordinarioDiurno?.ore || '0',
-      day.straordinarioDiurno?.minuti || '0'
-    );
-    if (diurnoMinutes > 0) {
-      const overtimeRate = calculateOvertimeRate(hourlyRate, 0.25);
-      salary += (diurnoMinutes / 60) * overtimeRate;
-    }
-
-    // Notturno overtime (maggiorazione 40%)
-    const notturnoMinutes = calculateOvertimeMinutes(
-      day.straordinarioNotturno?.ore || '0',
-      day.straordinarioNotturno?.minuti || '0'
-    );
-    if (notturnoMinutes > 0) {
-      const overtimeRate = calculateOvertimeRate(hourlyRate, 0.40);
-      salary += (notturnoMinutes / 60) * overtimeRate;
-    }
-
-    // Festivo overtime (maggiorazione 50%)
-    const festivoMinutes = calculateOvertimeMinutes(
-      day.straordinarioFestivo?.ore || '0',
-      day.straordinarioFestivo?.minuti || '0'
-    );
-    if (festivoMinutes > 0) {
-      const overtimeRate = calculateOvertimeRate(hourlyRate, 0.50);
-      salary += (festivoMinutes / 60) * overtimeRate;
-    }
-
-    return Number(salary.toFixed(2));
+    return calculateDailySalary(day);
   }, [weeks, parameters, activeWeek]);
 
   const generateWeeklyReport = (weekIndex: number): string[] => {
