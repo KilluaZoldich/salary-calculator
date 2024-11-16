@@ -150,8 +150,8 @@ export default function SalaryCalculator() {
 
       // Base salary calculation for standard work day (7 hours and 36 minutes = 7.6 hours)
       const STANDARD_DAILY_HOURS = 7.6;
-      const hourlyRate = getNumericValue(parameters.stipendioBase) / (STANDARD_DAILY_HOURS * 22); // Diviso per ore giornaliere e giorni lavorativi
-      let salary = day.presenza ? hourlyRate * STANDARD_DAILY_HOURS * 22 / 22 : 0; // Moltiplico e divido per 22 per ottenere la paga giornaliera
+      const stipendioBase = getNumericValue(parameters.stipendioBase);
+      let salary = day.presenza ? stipendioBase / 22 : 0; // Divido lo stipendio base per i giorni lavorativi
 
       // Add guida compensation
       if (day.guida) {
@@ -199,7 +199,7 @@ export default function SalaryCalculator() {
         day.straordinarioDiurno?.minuti || '0'
       );
       if (diurnoMinutes > 0) {
-        const overtimeRate = calculateOvertimeRate(hourlyRate, 0.25);
+        const overtimeRate = calculateOvertimeRate(stipendioBase / 22, 0.25);
         salary += (diurnoMinutes / 60) * overtimeRate;
       }
 
@@ -209,7 +209,7 @@ export default function SalaryCalculator() {
         day.straordinarioNotturno?.minuti || '0'
       );
       if (notturnoMinutes > 0) {
-        const overtimeRate = calculateOvertimeRate(hourlyRate, 0.40);
+        const overtimeRate = calculateOvertimeRate(stipendioBase / 22, 0.40);
         salary += (notturnoMinutes / 60) * overtimeRate;
       }
 
@@ -219,7 +219,7 @@ export default function SalaryCalculator() {
         day.straordinarioFestivo?.minuti || '0'
       );
       if (festivoMinutes > 0) {
-        const overtimeRate = calculateOvertimeRate(hourlyRate, 0.50);
+        const overtimeRate = calculateOvertimeRate(stipendioBase / 22, 0.50);
         salary += (festivoMinutes / 60) * overtimeRate;
       }
 
