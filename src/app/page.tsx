@@ -486,9 +486,9 @@ export default function SalaryCalculator() {
                   <AnimatePresence initial={false}>
                     {expandedDays[dayIndex] && (
                       <motion.div
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: 'auto', opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
+                        initial={{ height: 0 }}
+                        animate={{ height: "auto" }}
+                        exit={{ height: 0 }}
                         transition={{ duration: 0.2 }}
                       >
                         <CardContent className="space-y-4 p-4 pt-0">
