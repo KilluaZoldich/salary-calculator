@@ -109,9 +109,9 @@ export default function SalaryCalculator() {
                     type="number"
                     value={parameters.stipendioBase}
                     onChange={(e) => setParameters({ ...parameters, stipendioBase: e.target.value })}
-                    className="w-full p-2 border rounded pl-7"
+                    className="w-full p-2 border rounded pl-8"
                   />
-                  <span className="absolute left-2 top-1/2 transform -translate-y-1/2">€</span>
+                  <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">€</span>
                 </div>
               </div>
               <div className="relative">
@@ -121,9 +121,9 @@ export default function SalaryCalculator() {
                     type="number"
                     value={parameters.indennitaGuida}
                     onChange={(e) => setParameters({ ...parameters, indennitaGuida: e.target.value })}
-                    className="w-full p-2 border rounded pl-7"
+                    className="w-full p-2 border rounded pl-8"
                   />
-                  <span className="absolute left-2 top-1/2 transform -translate-y-1/2">€</span>
+                  <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">€</span>
                 </div>
               </div>
               <div className="relative">
@@ -133,9 +133,9 @@ export default function SalaryCalculator() {
                     type="number"
                     value={parameters.extraMensa}
                     onChange={(e) => setParameters({ ...parameters, extraMensa: e.target.value })}
-                    className="w-full p-2 border rounded pl-7"
+                    className="w-full p-2 border rounded pl-8"
                   />
-                  <span className="absolute left-2 top-1/2 transform -translate-y-1/2">€</span>
+                  <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">€</span>
                 </div>
               </div>
               <div className="relative">
@@ -145,9 +145,9 @@ export default function SalaryCalculator() {
                     type="number"
                     value={parameters.ff}
                     onChange={(e) => setParameters({ ...parameters, ff: e.target.value })}
-                    className="w-full p-2 border rounded pl-7"
+                    className="w-full p-2 border rounded pl-8"
                   />
-                  <span className="absolute left-2 top-1/2 transform -translate-y-1/2">€</span>
+                  <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">€</span>
                 </div>
               </div>
               <div className="relative">
@@ -157,9 +157,9 @@ export default function SalaryCalculator() {
                     type="number"
                     value={parameters.ffCena}
                     onChange={(e) => setParameters({ ...parameters, ffCena: e.target.value })}
-                    className="w-full p-2 border rounded pl-7"
+                    className="w-full p-2 border rounded pl-8"
                   />
-                  <span className="absolute left-2 top-1/2 transform -translate-y-1/2">€</span>
+                  <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">€</span>
                 </div>
               </div>
               <div className="relative">
@@ -169,9 +169,9 @@ export default function SalaryCalculator() {
                     type="number"
                     value={parameters.reperibilitaFeriale}
                     onChange={(e) => setParameters({ ...parameters, reperibilitaFeriale: e.target.value })}
-                    className="w-full p-2 border rounded pl-7"
+                    className="w-full p-2 border rounded pl-8"
                   />
-                  <span className="absolute left-2 top-1/2 transform -translate-y-1/2">€</span>
+                  <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">€</span>
                 </div>
               </div>
               <div className="relative">
@@ -181,9 +181,9 @@ export default function SalaryCalculator() {
                     type="number"
                     value={parameters.reperibilitaSabato}
                     onChange={(e) => setParameters({ ...parameters, reperibilitaSabato: e.target.value })}
-                    className="w-full p-2 border rounded pl-7"
+                    className="w-full p-2 border rounded pl-8"
                   />
-                  <span className="absolute left-2 top-1/2 transform -translate-y-1/2">€</span>
+                  <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">€</span>
                 </div>
               </div>
               <div className="relative">
@@ -193,9 +193,9 @@ export default function SalaryCalculator() {
                     type="number"
                     value={parameters.reperibilitaFestivo}
                     onChange={(e) => setParameters({ ...parameters, reperibilitaFestivo: e.target.value })}
-                    className="w-full p-2 border rounded pl-7"
+                    className="w-full p-2 border rounded pl-8"
                   />
-                  <span className="absolute left-2 top-1/2 transform -translate-y-1/2">€</span>
+                  <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">€</span>
                 </div>
               </div>
             </div>
