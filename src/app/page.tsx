@@ -7,7 +7,6 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Switch } from "@/components/ui/switch"
 import { Sun, Moon, Euro, ChevronRight, ChevronUp, ChevronDown, RotateCcw, Settings2, Calendar } from 'lucide-react'
-import { animate, stagger, inView } from "motion"
 import { useRef, useLayoutEffect } from "react"
 import { cn } from '@/lib/utils'
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -377,35 +376,38 @@ export default function SalaryCalculator() {
   const chevronRefs = useRef<(HTMLDivElement | null)[]>([]);
   const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
 
+  const setChevronRef = (index: number) => (el: HTMLDivElement | null) => {
+    chevronRefs.current[index] = el;
+  };
+
+  const setCardRef = (index: number) => (el: HTMLDivElement | null) => {
+    cardRefs.current[index] = el;
+  };
+
   useLayoutEffect(() => {
     // Animazione per i chevron quando si espandono
     Object.entries(expandedDays).forEach(([ dayIndex, isExpanded ]) => {
       const chevron = chevronRefs.current[parseInt(dayIndex)];
       if (chevron) {
-        animate(
-          chevron,
-          { rotate: isExpanded ? 90 : 0 },
-          { duration: 0.2, easing: "ease-out" }
-        );
+        chevron.style.transition = 'transform 0.2s ease-out';
+        chevron.style.transform = `rotate(${isExpanded ? 90 : 0}deg)`;
       }
     });
   }, [expandedDays]);
 
   useLayoutEffect(() => {
     // Animazione stagger per le card quando appaiono
-    inView(".modern-card", ({ target }) => {
-      animate(
-        target,
-        { 
-          opacity: [0, 1],
-          y: [20, 0]
-        },
-        { 
-          duration: 0.3,
-          delay: stagger(0.1),
-          easing: "ease-out"
-        }
-      );
+    const cards = document.querySelectorAll('.modern-card');
+    cards.forEach((card, index) => {
+      const element = card as HTMLElement;
+      element.style.opacity = '0';
+      element.style.transform = 'translateY(20px)';
+      element.style.transition = 'opacity 0.3s ease-out, transform 0.3s ease-out';
+      
+      setTimeout(() => {
+        element.style.opacity = '1';
+        element.style.transform = 'translateY(0)';
+      }, index * 100);
     });
   }, []);
 
@@ -475,7 +477,7 @@ export default function SalaryCalculator() {
                       <span className="sm:hidden">Sett.</span> {i + 1}
                       {hasData && (
                         <div
-                          ref={el => chevronRefs.current[i] = el}
+                          ref={setChevronRef(i)}
                           className="week-tab-indicator transform"
                         />
                       )}
@@ -508,7 +510,7 @@ export default function SalaryCalculator() {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <div
-                          ref={el => chevronRefs.current[dayIndex] = el}
+                          ref={setChevronRef(dayIndex)}
                           className="transform"
                         >
                           <ChevronRight className="h-4 w-4 text-muted-foreground" />
@@ -534,7 +536,7 @@ export default function SalaryCalculator() {
 
                   {expandedDays[dayIndex] && (
                     <div
-                      ref={el => cardRefs.current[dayIndex] = el}
+                      ref={setCardRef(dayIndex)}
                       className="overflow-hidden"
                     >
                       <CardContent className="space-y-4 p-4 pt-0">
