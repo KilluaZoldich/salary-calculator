@@ -1,13 +1,14 @@
 'use client'
 
-import { useEffect, useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { Button } from "@/components/ui/button"; 
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Switch } from "@/components/ui/switch"
 import { Sun, Moon, Euro, ChevronRight, ChevronUp, ChevronDown, RotateCcw, Settings2, Calendar } from 'lucide-react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { animate, stagger, inView } from "motion"
+import { useRef, useLayoutEffect } from "react"
 import { cn } from '@/lib/utils'
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -373,6 +374,41 @@ export default function SalaryCalculator() {
     setTotalSalary(Math.round(total * 100) / 100);
   }, [weeks, calculateDaySalary]);
 
+  const chevronRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
+
+  useLayoutEffect(() => {
+    // Animazione per i chevron quando si espandono
+    Object.entries(expandedDays).forEach(([ dayIndex, isExpanded ]) => {
+      const chevron = chevronRefs.current[parseInt(dayIndex)];
+      if (chevron) {
+        animate(
+          chevron,
+          { rotate: isExpanded ? 90 : 0 },
+          { duration: 0.2, easing: "ease-out" }
+        );
+      }
+    });
+  }, [expandedDays]);
+
+  useLayoutEffect(() => {
+    // Animazione stagger per le card quando appaiono
+    inView(".modern-card", ({ target }) => {
+      animate(
+        target,
+        { 
+          opacity: [0, 1],
+          y: [20, 0]
+        },
+        { 
+          duration: 0.3,
+          delay: stagger(0.1),
+          easing: "ease-out"
+        }
+      );
+    });
+  }, []);
+
   return (
     <div className="container mx-auto p-4 min-h-screen">
       <div className="flex justify-between items-center mb-4">
@@ -438,10 +474,9 @@ export default function SalaryCalculator() {
                       <span className="hidden sm:inline">Settimana</span>
                       <span className="sm:hidden">Sett.</span> {i + 1}
                       {hasData && (
-                        <motion.span
-                          initial={{ scale: 0 }}
-                          animate={{ scale: 1 }}
-                          className="week-tab-indicator"
+                        <div
+                          ref={el => chevronRefs.current[i] = el}
+                          className="week-tab-indicator transform"
                         />
                       )}
                     </span>
@@ -472,12 +507,12 @@ export default function SalaryCalculator() {
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <motion.div
-                          animate={{ rotate: expandedDays[dayIndex] ? 90 : 0 }}
-                          transition={{ duration: 0.2 }}
+                        <div
+                          ref={el => chevronRefs.current[dayIndex] = el}
+                          className="transform"
                         >
                           <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                        </motion.div>
+                        </div>
                         <span className={cn(
                           "text-base sm:text-lg font-medium",
                           isWeekend ? "text-orange-500" : "text-primary"
@@ -497,148 +532,144 @@ export default function SalaryCalculator() {
                     </div>
                   </CardHeader>
 
-                  <AnimatePresence initial={false}>
-                    {expandedDays[dayIndex] && (
-                      <motion.div
-                        initial={{ height: 0 }}
-                        animate={{ height: "auto" }}
-                        exit={{ height: 0 }}
-                        transition={{ duration: 0.2 }}
-                      >
-                        <CardContent className="space-y-4 p-4 pt-0">
-                          {/* Day Options */}
-                          <div className="grid grid-cols-2 gap-4 mb-4">
-                            <div className="flex items-center">
-                              <Button
-                                variant={dayData.guida ? "default" : "outline"}
-                                size="sm"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleDayChange(activeWeek, dayIndex, 'guida', !dayData.guida);
-                                }}
-                                className="text-xs h-7 w-full"
-                              >
-                                Guida
-                              </Button>
-                            </div>
-
-                            <div className="flex items-center">
-                              <Button
-                                variant={dayData.extraMensa ? "default" : "outline"}
-                                size="sm"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleDayChange(activeWeek, dayIndex, 'extraMensa', !dayData.extraMensa);
-                                }}
-                                className="text-xs h-7 w-full"
-                              >
-                                Extra Mensa
-                              </Button>
-                            </div>
-
-                            <div className="flex items-center">
-                              <Button
-                                variant={dayData.ff ? "default" : "outline"}
-                                size="sm"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleDayChange(activeWeek, dayIndex, 'ff', !dayData.ff);
-                                }}
-                                className="text-xs h-7 w-full"
-                              >
-                                FF
-                              </Button>
-                            </div>
-
-                            <div className="flex items-center">
-                              <Button
-                                variant={dayData.reperibilita ? "default" : "outline"}
-                                size="sm"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleDayChange(activeWeek, dayIndex, 'reperibilita', !dayData.reperibilita);
-                                }}
-                                className="text-xs h-7 w-full"
-                              >
-                                Reperibilità
-                              </Button>
-                            </div>
-
-                            <div className="flex items-center">
-                              <Button
-                                variant={dayData.ffCena ? "default" : "outline"}
-                                size="sm"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleDayChange(activeWeek, dayIndex, 'ffCena', !dayData.ffCena);
-                                }}
-                                className="text-xs h-7 w-full"
-                              >
-                                FF Cena
-                              </Button>
-                            </div>
+                  {expandedDays[dayIndex] && (
+                    <div
+                      ref={el => cardRefs.current[dayIndex] = el}
+                      className="overflow-hidden"
+                    >
+                      <CardContent className="space-y-4 p-4 pt-0">
+                        {/* Day Options */}
+                        <div className="grid grid-cols-2 gap-4 mb-4">
+                          <div className="flex items-center">
+                            <Button
+                              variant={dayData.guida ? "default" : "outline"}
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDayChange(activeWeek, dayIndex, 'guida', !dayData.guida);
+                              }}
+                              className="text-xs h-7 w-full"
+                            >
+                              Guida
+                            </Button>
                           </div>
 
-                          {/* Overtime Inputs */}
-                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                            {[
-                              { 
-                                label: 'Straordinario Diurno',
-                                key: 'straordinarioDiurno' as const,
-                                icon: <Sun className="h-4 w-4 text-yellow-500" />
-                              },
-                              { 
-                                label: 'Straordinario Notturno',
-                                key: 'straordinarioNotturno' as const,
-                                icon: <Moon className="h-4 w-4 text-blue-500" />
-                              },
-                              { 
-                                label: 'Straordinario Festivo',
-                                key: 'straordinarioFestivo' as const,
-                                icon: <Calendar className="h-4 w-4 text-red-500" />
-                              }
-                            ].map(({ label, key, icon }) => (
-                              <div key={key} className="space-y-2">
-                                <Label className="text-sm text-muted-foreground flex items-center gap-2">
-                                  {icon} {label}
-                                </Label>
-                                <div className="flex gap-2">
-                                  <div className="flex-1">
-                                    <Input
-                                      type="number"
-                                      value={dayData[key].ore}
-                                      onChange={(e) => handleOvertimeChange(activeWeek, dayIndex, key, 'ore', e.target.value)}
-                                      placeholder="Ore"
-                                      className="modern-input text-sm"
-                                    />
-                                  </div>
-                                  <div className="flex-1">
-                                    <Input
-                                      type="number"
-                                      value={dayData[key].minuti}
-                                      onChange={(e) => handleOvertimeChange(activeWeek, dayIndex, key, 'minuti', e.target.value)}
-                                      placeholder="Min"
-                                      className="modern-input text-sm"
-                                    />
-                                  </div>
+                          <div className="flex items-center">
+                            <Button
+                              variant={dayData.extraMensa ? "default" : "outline"}
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDayChange(activeWeek, dayIndex, 'extraMensa', !dayData.extraMensa);
+                              }}
+                              className="text-xs h-7 w-full"
+                            >
+                              Extra Mensa
+                            </Button>
+                          </div>
+
+                          <div className="flex items-center">
+                            <Button
+                              variant={dayData.ff ? "default" : "outline"}
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDayChange(activeWeek, dayIndex, 'ff', !dayData.ff);
+                              }}
+                              className="text-xs h-7 w-full"
+                            >
+                              FF
+                            </Button>
+                          </div>
+
+                          <div className="flex items-center">
+                            <Button
+                              variant={dayData.reperibilita ? "default" : "outline"}
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDayChange(activeWeek, dayIndex, 'reperibilita', !dayData.reperibilita);
+                              }}
+                              className="text-xs h-7 w-full"
+                            >
+                              Reperibilità
+                            </Button>
+                          </div>
+
+                          <div className="flex items-center">
+                            <Button
+                              variant={dayData.ffCena ? "default" : "outline"}
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDayChange(activeWeek, dayIndex, 'ffCena', !dayData.ffCena);
+                              }}
+                              className="text-xs h-7 w-full"
+                            >
+                              FF Cena
+                            </Button>
+                          </div>
+                        </div>
+
+                        {/* Overtime Inputs */}
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                          {[
+                            { 
+                              label: 'Straordinario Diurno',
+                              key: 'straordinarioDiurno' as const,
+                              icon: <Sun className="h-4 w-4 text-yellow-500" />
+                            },
+                            { 
+                              label: 'Straordinario Notturno',
+                              key: 'straordinarioNotturno' as const,
+                              icon: <Moon className="h-4 w-4 text-blue-500" />
+                            },
+                            { 
+                              label: 'Straordinario Festivo',
+                              key: 'straordinarioFestivo' as const,
+                              icon: <Calendar className="h-4 w-4 text-red-500" />
+                            }
+                          ].map(({ label, key, icon }) => (
+                            <div key={key} className="space-y-2">
+                              <Label className="text-sm text-muted-foreground flex items-center gap-2">
+                                {icon} {label}
+                              </Label>
+                              <div className="flex gap-2">
+                                <div className="flex-1">
+                                  <Input
+                                    type="number"
+                                    value={dayData[key].ore}
+                                    onChange={(e) => handleOvertimeChange(activeWeek, dayIndex, key, 'ore', e.target.value)}
+                                    placeholder="Ore"
+                                    className="modern-input text-sm"
+                                  />
+                                </div>
+                                <div className="flex-1">
+                                  <Input
+                                    type="number"
+                                    value={dayData[key].minuti}
+                                    onChange={(e) => handleOvertimeChange(activeWeek, dayIndex, key, 'minuti', e.target.value)}
+                                    placeholder="Min"
+                                    className="modern-input text-sm"
+                                  />
                                 </div>
                               </div>
-                            ))}
-                          </div>
-
-                          {/* Daily Salary */}
-                          <div className="pt-4 border-t">
-                            <div className="flex justify-between items-center">
-                              <span className="text-sm text-muted-foreground">Totale Giornaliero</span>
-                              <span className="text-lg font-semibold">
-                                €{calculateDaySalary(activeWeek, dayIndex).toFixed(2)}
-                              </span>
                             </div>
+                          ))}
+                        </div>
+
+                        {/* Daily Salary */}
+                        <div className="pt-4 border-t">
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm text-muted-foreground">Totale Giornaliero</span>
+                            <span className="text-lg font-semibold">
+                              €{calculateDaySalary(activeWeek, dayIndex).toFixed(2)}
+                            </span>
                           </div>
-                        </CardContent>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
+                        </div>
+                      </CardContent>
+                    </div>
+                  )}
                 </Card>
               );
             })}
